@@ -9,7 +9,7 @@ export const metadata = {
 }
 
 export default async function ShopPage() {
-  let products = []
+  let products: Awaited<ReturnType<typeof getProducts>> = []
   try {
     products = await getProducts()
   } catch {

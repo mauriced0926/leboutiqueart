@@ -16,8 +16,9 @@ export async function generateStaticParams() {
   }
 }
 
-export async function generateMetadata({ params }: { params: { handle: string } }) {
-  const product = await getProduct(params.handle)
+export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }) {
+  const { handle } = await params
+  const product = await getProduct(handle)
   if (!product) return {}
   return {
     title: `${product.title} — Le Boutique Art`,
@@ -28,8 +29,9 @@ export async function generateMetadata({ params }: { params: { handle: string } 
   }
 }
 
-export default async function ProductPage({ params }: { params: { handle: string } }) {
-  const product = await getProduct(params.handle)
+export default async function ProductPage({ params }: { params: Promise<{ handle: string }> }) {
+  const { handle } = await params
+  const product = await getProduct(handle)
   if (!product) notFound()
 
   const defaultVariant = product.variants[0]

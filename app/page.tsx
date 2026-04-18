@@ -6,7 +6,7 @@ import Link from 'next/link'
 export const revalidate = 60
 
 export default async function HomePage() {
-  let products = []
+  let products: Awaited<ReturnType<typeof getProducts>> = []
   try {
     products = await getProducts()
   } catch {
