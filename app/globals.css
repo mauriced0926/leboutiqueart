@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-lm-bg text-lm-text font-sans transition-colors duration-300;
+  }
+
+  .dark body {
+    @apply bg-dm-bg text-dm-text;
+  }
+
+  /* Scrollbar — light */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { @apply bg-lm-bg; }
+  ::-webkit-scrollbar-thumb { @apply bg-lm-border rounded-sm; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-lm-muted; }
+
+  /* Scrollbar — dark */
+  .dark ::-webkit-scrollbar-track { @apply bg-dm-bg; }
+  .dark ::-webkit-scrollbar-thumb { @apply bg-dm-border; }
+  .dark ::-webkit-scrollbar-thumb:hover { @apply bg-dm-muted; }
+
+  /* Selection */
+  ::selection { @apply bg-lm-text text-lm-bg; }
+  .dark ::selection { @apply bg-gold text-dm-bg; }
+}
+
+@layer utilities {
+  .tracking-ultra { letter-spacing: 0.35em; }
+}
+
+/* ── Hero slide fade-in ────────────────────────────────────────────── */
+@keyframes hero-fade-in {
+  from { opacity: 0; transform: scale(1.01); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.hero-slide-in {
+  animation: hero-fade-in 0.5s ease forwards;
+}

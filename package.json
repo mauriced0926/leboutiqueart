@@ -1,0 +1,29 @@
+{
+  "name": "leboutiqueart",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "15.3.1",
+    "react": "^18",
+    "react-dom": "^18",
+    "framer-motion": "^11.3.19",
+    "lucide-react": "^0.400.0",
+    "@anthropic-ai/sdk": "^0.39.0",
+    "resend": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
