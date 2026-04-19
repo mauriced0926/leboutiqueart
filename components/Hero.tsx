@@ -191,13 +191,13 @@ function ImageLayout({ products, landscape, soloOnly }: { products: Product[]; l
     )
   }
 
-  // soloOnly — full bleed, fills the entire hero
+  // soloOnly — full bleed, loads directly from public folder (no CDN compression)
   if (soloOnly) {
     return (
       <div className="absolute inset-0 bottom-24">
         <div className="relative w-full h-full overflow-hidden">
           <Image
-            src={imgs[0].featuredImage!.url}
+            src="/featured.jpg"
             alt={imgs[0].featuredImage!.altText ?? imgs[0].title}
             fill className="object-cover object-center"
             sizes="100vw" quality={100} draggable={false} priority
