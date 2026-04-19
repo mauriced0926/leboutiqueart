@@ -316,27 +316,27 @@ export default function Hero({ products }: HeroProps) {
                     onClick={(e) => { e.stopPropagation(); go(i) }}
                     className={`transition-all duration-300 ${
                       i === current
-                        ? 'w-6 h-[2px] bg-lm-text dark:bg-gold'
-                        : 'w-[5px] h-[5px] rounded-full bg-lm-border dark:bg-dm-border hover:bg-lm-muted dark:hover:bg-dm-muted'
+                        ? 'w-8 h-[3px] bg-lm-text dark:bg-gold'
+                        : 'w-[7px] h-[7px] rounded-full bg-lm-muted/40 dark:bg-dm-muted/40 hover:bg-lm-muted dark:hover:bg-dm-muted'
                     }`}
                     aria-label={`Slide ${i + 1}`}
                   />
                 ))}
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={(e) => { e.stopPropagation(); prev() }}
-                  className="w-8 h-8 flex items-center justify-center text-lm-muted dark:text-dm-muted hover:text-lm-text dark:hover:text-dm-text transition-colors"
+                  className="w-9 h-9 flex items-center justify-center border border-lm-border dark:border-dm-border text-lm-text dark:text-dm-text hover:border-lm-text dark:hover:border-dm-text hover:text-gold dark:hover:text-gold transition-all duration-200"
                   aria-label="Previous"
                 >
-                  <ChevronLeft size={20} strokeWidth={1.5} />
+                  <ChevronLeft size={16} strokeWidth={1.5} />
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); next() }}
-                  className="w-8 h-8 flex items-center justify-center text-lm-muted dark:text-dm-muted hover:text-lm-text dark:hover:text-dm-text transition-colors"
+                  className="w-9 h-9 flex items-center justify-center border border-lm-border dark:border-dm-border text-lm-text dark:text-dm-text hover:border-lm-text dark:hover:border-dm-text hover:text-gold dark:hover:text-gold transition-all duration-200"
                   aria-label="Next"
                 >
-                  <ChevronRight size={20} strokeWidth={1.5} />
+                  <ChevronRight size={16} strokeWidth={1.5} />
                 </button>
               </div>
             </>
