@@ -288,7 +288,7 @@ export default function Hero({ products }: HeroProps) {
   return (
     <section
       className={`relative h-screen min-h-[600px] overflow-hidden select-none cursor-grab active:cursor-grabbing transition-colors duration-300
-        ${slide.soloOnly ? 'bg-white dark:bg-white' : 'bg-lm-surface dark:bg-dm-bg'}`}
+        ${slide.soloOnly ? 'bg-[#e8e6e1] dark:bg-[#e8e6e1]' : 'bg-lm-surface dark:bg-dm-bg'}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
