@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import ShopSearch from '@/components/ShopSearch'
 import { getProducts } from '@/lib/shopify'
 
@@ -35,7 +36,9 @@ export default async function ShopPage() {
 
         {/* Search + Grid */}
         {products.length > 0 ? (
-          <ShopSearch products={products} />
+          <Suspense fallback={null}>
+            <ShopSearch products={products} />
+          </Suspense>
         ) : (
           <div className="flex flex-col items-center justify-center py-40 text-center">
             <p className="font-serif text-4xl text-lm-text dark:text-dm-text mb-4">Coming Soon</p>

@@ -2,14 +2,16 @@
 
 import Link from 'next/link'
 import { useCart } from './CartProvider'
-import { ShoppingBag, Menu, X } from 'lucide-react'
+import { ShoppingBag, Menu, X, Search } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
+import SearchOverlay from './SearchOverlay'
 import { useState, useEffect } from 'react'
 
 export default function Navbar() {
   const { cart, openCart } = useCart()
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50)
@@ -24,10 +26,17 @@ export default function Navbar() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-lm-bg/60 dark:bg-dm-bg/60 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
 
-          {/* Left nav — desktop links + mobile theme toggle */}
-          <div className="flex items-center gap-8">
-            <div className="md:hidden">
+          {/* Left nav — desktop links + mobile theme toggle + mobile search */}
+          <div className="flex items-center gap-5 md:gap-8">
+            <div className="md:hidden flex items-center gap-4">
               <ThemeToggle />
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="text-lm-text dark:text-dm-text hover:text-gold transition-colors duration-300"
+                aria-label="Search"
+              >
+                <Search size={16} strokeWidth={1.5} />
+              </button>
             </div>
             <Link href="/shop" className="hidden md:block text-[11px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted hover:text-lm-text dark:hover:text-dm-text transition-colors duration-300">
               Shop
@@ -47,6 +56,14 @@ export default function Navbar() {
 
           {/* Right actions */}
           <div className="flex items-center gap-5 ml-auto">
+            {/* Desktop: Search → ThemeToggle → Cart */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="hidden md:flex text-lm-text dark:text-dm-text hover:text-gold transition-colors duration-300"
+              aria-label="Search"
+            >
+              <Search size={16} strokeWidth={1.5} />
+            </button>
             <div className="hidden md:block">
               <ThemeToggle />
             </div>
@@ -73,6 +90,9 @@ export default function Navbar() {
 
         </div>
       </nav>
+
+      {/* Search overlay */}
+      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
 
       {/* Mobile menu */}
       {menuOpen && (
