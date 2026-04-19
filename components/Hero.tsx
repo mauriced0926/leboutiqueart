@@ -127,12 +127,12 @@ function ImageLayout({ products, landscape, soloOnly }: { products: Product[]; l
   // 4 images — framed row: 2 on mobile/tablet, 4 on desktop
   if (imgs.length === 4) {
     return (
-      <div className="absolute inset-0 bottom-24 flex items-center justify-center gap-2 lg:gap-3 px-6 lg:px-16">
-        <div className="flex gap-2 lg:gap-3 w-full" style={{ height: '68%' }}>
+      <div className="absolute inset-0 bottom-24 flex items-center justify-center px-6 lg:px-16">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3 w-full" style={{ height: '68%' }}>
           {imgs.map((p, i) => (
             <div
               key={p.id}
-              className={`relative flex-1 overflow-hidden ${FRAME} ${i >= 2 ? 'hidden lg:block' : ''}`}
+              className={`relative overflow-hidden ${FRAME} ${i >= 2 ? 'hidden lg:block' : ''}`}
             >
               <Image
                 src={p.featuredImage!.url}
