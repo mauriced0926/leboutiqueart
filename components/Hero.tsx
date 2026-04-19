@@ -187,14 +187,14 @@ function ImageLayout({ products }: { products: Product[] }) {
     )
   }
 
-  // 1 image — fills the right half of the hero, edge to edge
+  // 1 image — centered portrait
   return (
-    <div className="absolute right-0 top-0 bottom-24 w-1/2 md:w-[52%]">
-      <div className="relative w-full h-full overflow-hidden">
+    <div className="absolute inset-x-0 top-0 bottom-24 flex items-center justify-center">
+      <div className="relative h-[75%] aspect-[2/3] overflow-hidden shadow-xl dark:shadow-2xl">
         <Image
           src={imgs[0].featuredImage!.url}
           alt={imgs[0].featuredImage!.altText ?? imgs[0].title}
-          fill className="object-cover object-top" sizes="(max-width: 768px) 100vw, 55vw"
+          fill className="object-cover object-top" sizes="(max-width: 768px) 80vw, 50vw"
           quality={90} draggable={false} priority
         />
       </div>
