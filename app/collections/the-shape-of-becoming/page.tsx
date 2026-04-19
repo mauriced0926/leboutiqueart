@@ -16,6 +16,7 @@ const CHAPTERS = [
     number: '01',
     name: 'Origin',
     subtitle: 'Identity & Obscurity',
+    tagline: 'Where perception is unclear, and self is undefined',
     tag: 'origin',
   },
   {
@@ -23,6 +24,7 @@ const CHAPTERS = [
     number: '02',
     name: 'Fracture',
     subtitle: 'Emotion & Tension',
+    tagline: 'Where feeling intensifies and begins to break form',
     tag: 'fracture',
   },
   {
@@ -30,6 +32,7 @@ const CHAPTERS = [
     number: '03',
     name: 'Release',
     subtitle: 'Expression & Action',
+    tagline: 'Where tension converts into movement',
     tag: 'release',
   },
   {
@@ -37,6 +40,7 @@ const CHAPTERS = [
     number: '04',
     name: 'Perception',
     subtitle: 'Pattern & Flow',
+    tagline: 'Where chaos becomes understood through structure',
     tag: 'perception',
   },
   {
@@ -44,6 +48,7 @@ const CHAPTERS = [
     number: '05',
     name: 'Pursuit',
     subtitle: 'Motion & Identity in Action',
+    tagline: 'Where identity is tested through ambition and movement',
     tag: 'pursuit',
   },
   {
@@ -51,6 +56,7 @@ const CHAPTERS = [
     number: '06',
     name: 'Arrival',
     subtitle: 'Status & External Form',
+    tagline: 'Where identity materializes into environment',
     tag: 'arrival',
   },
   {
@@ -58,6 +64,7 @@ const CHAPTERS = [
     number: '07',
     name: 'Resolution',
     subtitle: 'Balance & Stillness',
+    tagline: 'Where everything settles into clarity',
     tag: 'resolution',
   },
 ]
@@ -110,6 +117,9 @@ export default async function CollectionPage() {
                   </h2>
                   <p className="text-[10px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted mt-2">
                     {chapter.subtitle}
+                  </p>
+                  <p className="font-serif text-lm-muted dark:text-dm-muted text-sm italic mt-2">
+                    {chapter.tagline}
                   </p>
                 </div>
                 {chapterProducts.length > 0 && (
