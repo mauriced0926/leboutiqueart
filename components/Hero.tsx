@@ -94,65 +94,50 @@ function buildSlides(products: Product[]): Slide[] {
   return slides
 }
 
+// ── Shared frame style ─────────────────────────────────────────────────────
+// Thin white outline + shadow — visible in dark mode, subtle in light mode
+const FRAME = 'border border-white/50 shadow-[0_4px_24px_rgba(0,0,0,0.18)]'
+
 // ── Image layouts ──────────────────────────────────────────────────────────
 
 function ImageLayout({ products }: { products: Product[] }) {
   const imgs = products.filter((p) => p.featuredImage).slice(0, 4)
 
-  // No products — ghost placeholder panels
+  // No products — ghost placeholder frames
   if (imgs.length === 0) {
     return (
-      <div className="absolute inset-x-0 top-0 bottom-24 flex items-center justify-center gap-5 px-12">
+      <div className="absolute inset-0 bottom-24 flex items-center justify-center gap-4 px-14">
         {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="flex-1 h-[72%] border border-lm-border dark:border-dm-border opacity-30"
-          />
+          <div key={i} className="flex-1 border border-white/20 opacity-40" style={{ height: '62%' }} />
         ))}
       </div>
     )
   }
 
-  // 4 images — full-width equal strips (gallery wall)
+  const Img = ({ p, className }: { p: Product; className: string }) => (
+    <div className={`relative overflow-hidden flex-shrink-0 ${FRAME} ${className}`}>
+      <Image
+        src={p.featuredImage!.url}
+        alt={p.featuredImage!.altText ?? p.title}
+        fill className="object-cover object-top"
+        sizes="(max-width: 768px) 80vw, 30vw"
+        quality={90} draggable={false} priority
+      />
+    </div>
+  )
+
+  // 4 images — framed row, contained with breathing room
   if (imgs.length === 4) {
     return (
-      <div className="absolute inset-x-0 top-0 bottom-24 flex gap-[2px]">
-        {imgs.map((p) => (
-          <div key={p.id} className="relative flex-1 overflow-hidden">
-            <Image
-              src={p.featuredImage!.url}
-              alt={p.featuredImage!.altText ?? p.title}
-              fill
-              className="object-cover object-top"
-              sizes="25vw"
-              quality={90}
-              draggable={false}
-              priority
-            />
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  // 3 images — large left + two stacked right
-  if (imgs.length === 3) {
-    return (
-      <div className="absolute inset-x-0 top-0 bottom-24 flex items-center justify-center gap-4 px-10">
-        <div className="relative h-[78%] aspect-[2/3] overflow-hidden shadow-lg dark:shadow-2xl flex-shrink-0">
-          <Image
-            src={imgs[0].featuredImage!.url}
-            alt={imgs[0].featuredImage!.altText ?? imgs[0].title}
-            fill className="object-cover" sizes="35vw" quality={90} draggable={false} priority
-          />
-        </div>
-        <div className="flex flex-col gap-4 h-[78%]">
-          {[imgs[1], imgs[2]].map((p) => (
-            <div key={p.id} className="relative flex-1 aspect-[2/3] overflow-hidden shadow-md dark:shadow-xl">
+      <div className="absolute inset-0 bottom-24 flex items-center justify-center gap-3 px-10 lg:px-16">
+        <div className="flex gap-3 w-full" style={{ height: '68%' }}>
+          {imgs.map((p) => (
+            <div key={p.id} className={`relative flex-1 overflow-hidden ${FRAME}`}>
               <Image
                 src={p.featuredImage!.url}
                 alt={p.featuredImage!.altText ?? p.title}
-                fill className="object-cover" sizes="20vw" quality={90} draggable={false} priority
+                fill className="object-cover object-top"
+                sizes="25vw" quality={90} draggable={false} priority
               />
             </div>
           ))}
@@ -161,43 +146,33 @@ function ImageLayout({ products }: { products: Product[] }) {
     )
   }
 
-  // 2 images — staggered duo
-  if (imgs.length === 2) {
+  // 3 images — large left + two stacked right
+  if (imgs.length === 3) {
     return (
-      <div className="absolute inset-x-0 top-0 bottom-24 flex items-center justify-center gap-5 px-16">
-        {imgs.map((p, i) => (
-          <div
-            key={p.id}
-            className="relative aspect-[2/3] overflow-hidden shadow-lg dark:shadow-2xl flex-shrink-0"
-            style={{
-              height: i === 0 ? '72%' : '58%',
-              alignSelf: i === 0 ? 'flex-start' : 'flex-end',
-              marginTop: i === 0 ? '2vh' : 0,
-              marginBottom: i === 1 ? '2vh' : 0,
-            }}
-          >
-            <Image
-              src={p.featuredImage!.url}
-              alt={p.featuredImage!.altText ?? p.title}
-              fill className="object-cover" sizes="35vw" quality={90} draggable={false} priority
-            />
-          </div>
-        ))}
+      <div className="absolute inset-0 bottom-24 flex items-center justify-center gap-4 px-14">
+        <Img p={imgs[0]} className="h-[64%] aspect-[2/3]" />
+        <div className="flex flex-col gap-3 h-[64%]">
+          <Img p={imgs[1]} className="flex-1 aspect-[2/3]" />
+          <Img p={imgs[2]} className="flex-1 aspect-[2/3]" />
+        </div>
       </div>
     )
   }
 
-  // 1 image — centered portrait
-  return (
-    <div className="absolute inset-x-0 top-0 bottom-24 flex items-center justify-center">
-      <div className="relative h-[75%] aspect-[2/3] overflow-hidden shadow-xl dark:shadow-2xl">
-        <Image
-          src={imgs[0].featuredImage!.url}
-          alt={imgs[0].featuredImage!.altText ?? imgs[0].title}
-          fill className="object-cover object-top" sizes="(max-width: 768px) 80vw, 50vw"
-          quality={90} draggable={false} priority
-        />
+  // 2 images — staggered duo
+  if (imgs.length === 2) {
+    return (
+      <div className="absolute inset-0 bottom-24 flex items-center justify-center gap-4 px-20">
+        <Img p={imgs[0]} className="h-[62%] aspect-[2/3] self-start mt-[6%]" />
+        <Img p={imgs[1]} className="h-[52%] aspect-[2/3] self-end mb-[6%]" />
       </div>
+    )
+  }
+
+  // 1 image — centered portrait with frame
+  return (
+    <div className="absolute inset-0 bottom-24 flex items-center justify-center">
+      <Img p={imgs[0]} className="h-[68%] aspect-[2/3]" />
     </div>
   )
 }
