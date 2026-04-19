@@ -55,6 +55,14 @@ const SLIDE_CONFIGS = [
     shopHref: '/shop',
     keywords: ['cars', 'automotive', 'vehicle', 'motorsport'],
   },
+  {
+    id: 'other',
+    category: 'Other',
+    subtitle: 'Beyond the frame',
+    shopHref: '/shop',
+    keywords: ['other'],
+    landscape: true,
+  },
 ]
 
 interface Slide {
@@ -63,6 +71,7 @@ interface Slide {
   subtitle: string
   shopHref: string
   products: Product[]
+  landscape?: boolean
 }
 
 function buildSlides(products: Product[]): Slide[] {
@@ -76,7 +85,7 @@ function buildSlides(products: Product[]): Slide[] {
     if (matched.length > 0) {
       // Single product — use the product title as the slide name
       const category = matched.length === 1 ? matched[0].title : config.category
-      slides.push({ ...config, category, products: matched.slice(0, 4) })
+      slides.push({ ...config, category, products: matched.slice(0, 4), landscape: (config as any).landscape })
     }
   }
 
@@ -100,7 +109,7 @@ const FRAME = 'border border-white/50 shadow-[0_4px_24px_rgba(0,0,0,0.18)]'
 
 // ── Image layouts ──────────────────────────────────────────────────────────
 
-function ImageLayout({ products }: { products: Product[] }) {
+function ImageLayout({ products, landscape }: { products: Product[]; landscape?: boolean }) {
   const imgs = products.filter((p) => p.featuredImage).slice(0, 4)
 
   // No products — ghost placeholder frames
@@ -172,10 +181,15 @@ function ImageLayout({ products }: { products: Product[] }) {
     )
   }
 
-  // 1 image — centered portrait with frame
+  // 1 image — landscape or portrait frame depending on slide config
   return (
-    <div className="absolute inset-0 bottom-24 flex items-center justify-center">
-      <Img p={imgs[0]} className="h-[60%] md:h-[68%] aspect-[2/3]" />
+    <div className="absolute inset-0 bottom-24 flex items-center justify-center px-8 lg:px-16">
+      <Img
+        p={imgs[0]}
+        className={landscape
+          ? 'w-[80%] lg:w-[65%] aspect-[3/2]'
+          : 'h-[60%] md:h-[68%] aspect-[2/3]'}
+      />
     </div>
   )
 }
@@ -257,7 +271,7 @@ export default function Hero({ products }: HeroProps) {
         key={contentKey.current}
         className={`absolute inset-0 transition-opacity duration-[240ms] hero-slide-in ${fading ? 'opacity-0' : 'opacity-100'}`}
       >
-        <ImageLayout products={slide.products} />
+        <ImageLayout products={slide.products} landscape={slide.landscape} />
       </div>
 
       {/* Text bar — always on clean background, always readable */}
