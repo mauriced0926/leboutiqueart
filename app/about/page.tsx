@@ -121,7 +121,7 @@ export default function AboutPage() {
             Bring a piece of Maicol&apos;s vision into your space.
           </h2>
           <p className="text-lm-muted dark:text-dm-muted text-sm mb-10 max-w-md mx-auto leading-relaxed">
-            Museum-grade fine art prints produced by Whitewall. Archival quality. Delivered worldwide.
+            Museum-grade fine art prints, designed by Maicol Diaz. Archival quality. Delivered worldwide.
           </p>
           <Link
             href="/shop"

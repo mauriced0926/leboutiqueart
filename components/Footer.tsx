@@ -27,9 +27,9 @@ export default function Footer() {
         <div>
           <p className="text-[10px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted mb-5">Print Production</p>
           <p className="text-sm text-lm-muted dark:text-dm-muted leading-relaxed">
-            All prints are designed by our artists, and printed by{' '}
-            <span className="text-lm-text dark:text-dm-text">Whitewall</span>
-            {' '}— the world&apos;s leading fine art lab. Archival inks. Museum-grade materials.
+            All prints are designed by{' '}
+            <span className="text-lm-text dark:text-dm-text">Maicol Diaz</span>
+            {' '}— archival inks, museum-grade materials, delivered worldwide.
           </p>
         </div>
       </div>

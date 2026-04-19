@@ -23,7 +23,7 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: 'Le Boutique Art — Fine Art Photography by Maicol Diaz',
-  description: 'Original fine art photography by Maicol Diaz. Bold lighting, cultural influence, and striking visual storytelling. Museum-grade prints produced by Whitewall.',
+  description: 'Original fine art photography by Maicol Diaz. Bold lighting, cultural influence, and striking visual storytelling. Museum-grade fine art prints.',
   metadataBase: new URL('https://leboutiqueart.com'),
   openGraph: {
     type: 'website',

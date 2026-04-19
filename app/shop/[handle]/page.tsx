@@ -1,11 +1,11 @@
 import { getProduct, getProducts, formatPrice } from '@/lib/shopify'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import AddToCartButton from '@/components/AddToCartButton'
 import VariantSelector from '@/components/VariantSelector'
 import ShareButtons from '@/components/ShareButtons'
 import CollapsibleSection from '@/components/CollapsibleSection'
+import ProductGallery from '@/components/ProductGallery'
 
 export const revalidate = 60
 
@@ -55,34 +55,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-12 lg:gap-20">
 
           {/* Images */}
-          <div className="flex flex-col gap-3">
-            <div className="relative aspect-[4/5] overflow-hidden bg-lm-surface dark:bg-dm-surface">
-              {product.featuredImage ? (
-                <Image
-                  src={product.featuredImage.url}
-                  alt={product.featuredImage.altText ?? product.title}
-                  fill
-                  priority
-                  className="object-cover object-center"
-                  sizes="(max-width: 1024px) 100vw, 60vw"
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="font-serif text-lm-muted dark:text-dm-muted">No image</span>
-                </div>
-              )}
-            </div>
-
-            {product.images.length > 1 && (
-              <div className="grid grid-cols-5 gap-2">
-                {product.images.slice(0, 5).map((img, i) => (
-                  <div key={i} className="relative aspect-square overflow-hidden bg-lm-surface dark:bg-dm-surface">
-                    <Image src={img.url} alt={img.altText ?? `${product.title} ${i + 1}`} fill className="object-cover" sizes="100px" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <ProductGallery product={product} />
 
           {/* Product info */}
           <div className="flex flex-col lg:pt-2">
@@ -117,7 +90,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
             <CollapsibleSection label="Certificate of Authenticity">
               <div className="flex flex-col gap-3 mb-6">
                 {[
-                  { label: 'Production', value: 'Designed by Maicol Diaz, printed by Whitewall — world\'s leading fine art lab' },
+                  { label: 'Production', value: 'Designed by Maicol Diaz' },
                   { label: 'Inks', value: 'Archival pigment inks, 100-year color guarantee' },
                   { label: 'Materials', value: 'Fine art paper, acrylic glass, Dibond, canvas' },
                   { label: 'Delivery', value: 'Secure packaging, worldwide shipping' },

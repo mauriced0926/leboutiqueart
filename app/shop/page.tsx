@@ -6,7 +6,7 @@ export const revalidate = 60
 
 export const metadata = {
   title: 'Shop — Le Boutique Art',
-  description: 'Browse original fine art photography by Maicol Diaz. Museum-grade prints produced by Whitewall.',
+  description: 'Browse original fine art photography by Maicol Diaz. Museum-grade fine art prints.',
 }
 
 export default async function ShopPage() {
