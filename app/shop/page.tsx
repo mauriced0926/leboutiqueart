@@ -1,4 +1,4 @@
-import ProductCard from '@/components/ProductCard'
+import ShopSearch from '@/components/ShopSearch'
 import { getProducts } from '@/lib/shopify'
 
 export const revalidate = 60
@@ -33,13 +33,9 @@ export default async function ShopPage() {
           </div>
         </div>
 
-        {/* Grid */}
+        {/* Search + Grid */}
         {products.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-12">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <ShopSearch products={products} />
         ) : (
           <div className="flex flex-col items-center justify-center py-40 text-center">
             <p className="font-serif text-4xl text-lm-text dark:text-dm-text mb-4">Coming Soon</p>
