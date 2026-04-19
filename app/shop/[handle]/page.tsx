@@ -115,7 +115,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
 
             {/* Certificate of Authenticity */}
             <CollapsibleSection label="Certificate of Authenticity">
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 mb-6">
                 {[
                   { label: 'Production', value: 'Produced by Whitewall — world\'s leading fine art lab' },
                   { label: 'Inks', value: 'Archival pigment inks, 100-year color guarantee' },
@@ -128,6 +128,9 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
                   </div>
                 ))}
               </div>
+              <p className="text-lm-muted dark:text-dm-muted text-sm leading-relaxed">
+                Le Boutique Art stands by the authenticity, security, and genuineness of its prints. All limited edition prints by Maicol Diaz are numbered and signed by the artist. A Certificate of Authenticity for limited edition prints by Maicol Diaz is available upon request.
+              </p>
             </CollapsibleSection>
 
             {/* Share */}
