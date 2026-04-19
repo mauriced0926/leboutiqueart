@@ -199,7 +199,7 @@ function ImageLayout({ products, landscape, soloOnly }: { products: Product[]; l
           <Image
             src={imgs[0].featuredImage!.url}
             alt={imgs[0].featuredImage!.altText ?? imgs[0].title}
-            fill className="object-cover object-top"
+            fill className="object-contain object-center"
             sizes="50vw" quality={90} draggable={false} priority
           />
         </div>
