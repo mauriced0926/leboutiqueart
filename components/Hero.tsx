@@ -74,7 +74,9 @@ function buildSlides(products: Product[]): Slide[] {
       return config.keywords.some((kw) => tags.some((t) => t.includes(kw)))
     })
     if (matched.length > 0) {
-      slides.push({ ...config, products: matched.slice(0, 4) })
+      // Single product — use the product title as the slide name
+      const category = matched.length === 1 ? matched[0].title : config.category
+      slides.push({ ...config, category, products: matched.slice(0, 4) })
     }
   }
 
@@ -185,14 +187,14 @@ function ImageLayout({ products }: { products: Product[] }) {
     )
   }
 
-  // 1 image — centered portrait, clear of the navbar
+  // 1 image — large portrait, shifted slightly right like an editorial spread
   return (
-    <div className="absolute inset-x-0 top-20 bottom-24 flex items-center justify-center">
-      <div className="relative h-[75%] aspect-[2/3] overflow-hidden shadow-xl dark:shadow-2xl">
+    <div className="absolute inset-x-0 top-20 bottom-24 flex items-center justify-center" style={{ paddingLeft: '12%' }}>
+      <div className="relative h-[88%] aspect-[2/3] overflow-hidden shadow-xl dark:shadow-2xl">
         <Image
           src={imgs[0].featuredImage!.url}
           alt={imgs[0].featuredImage!.altText ?? imgs[0].title}
-          fill className="object-cover object-top" sizes="(max-width: 768px) 80vw, 50vw"
+          fill className="object-cover object-top" sizes="(max-width: 768px) 80vw, 55vw"
           quality={90} draggable={false} priority
         />
       </div>
