@@ -21,7 +21,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-lm-bg/60 dark:bg-dm-bg/60 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
 
           {/* Left nav — desktop links + mobile theme toggle */}
