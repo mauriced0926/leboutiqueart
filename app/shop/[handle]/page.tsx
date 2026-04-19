@@ -117,7 +117,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
             <CollapsibleSection label="Certificate of Authenticity">
               <div className="flex flex-col gap-3 mb-6">
                 {[
-                  { label: 'Production', value: 'Produced by Whitewall — world\'s leading fine art lab' },
+                  { label: 'Production', value: 'Designed by Maicol Diaz, printed by Whitewall — world\'s leading fine art lab' },
                   { label: 'Inks', value: 'Archival pigment inks, 100-year color guarantee' },
                   { label: 'Materials', value: 'Fine art paper, acrylic glass, Dibond, canvas' },
                   { label: 'Delivery', value: 'Secure packaging, worldwide shipping' },
