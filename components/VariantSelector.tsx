@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { Product } from '@/lib/types'
 import AddToCartButton from './AddToCartButton'
+import { formatPrice } from '@/lib/shopify'
 
 interface VariantSelectorProps {
   product: Product
@@ -21,6 +22,11 @@ export default function VariantSelector({ product }: VariantSelectorProps) {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Live price — updates on variant change */}
+      <p className="text-2xl text-lm-text dark:text-dm-text">
+        {formatPrice(selectedVariant?.price ?? product.price, product.currencyCode)}
+      </p>
+
       {product.options.map((option) => (
         <div key={option.name}>
           <p className="text-[10px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted mb-3">{option.name}</p>

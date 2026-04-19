@@ -63,19 +63,21 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
             <h1 className="font-serif text-4xl md:text-5xl text-lm-text dark:text-dm-text leading-tight mb-5">
               {product.title}
             </h1>
-            <p className="text-2xl text-lm-text dark:text-dm-text mb-8">
-              {formatPrice(product.price, product.currencyCode)}
-            </p>
 
             {/* Variants or simple Add to Cart */}
             <div className="mb-8">
               {hasMultipleVariants ? (
                 <VariantSelector product={product} />
               ) : (
-                <AddToCartButton
-                  variantId={defaultVariant?.id ?? ''}
-                  availableForSale={defaultVariant?.availableForSale ?? false}
-                />
+                <>
+                  <p className="text-2xl text-lm-text dark:text-dm-text mb-8">
+                    {formatPrice(product.price, product.currencyCode)}
+                  </p>
+                  <AddToCartButton
+                    variantId={defaultVariant?.id ?? ''}
+                    availableForSale={defaultVariant?.availableForSale ?? false}
+                  />
+                </>
               )}
             </div>
 
