@@ -191,6 +191,22 @@ function ImageLayout({ products, landscape, soloOnly }: { products: Product[]; l
     )
   }
 
+  // soloOnly — fills the entire right half, edge to edge
+  if (soloOnly) {
+    return (
+      <div className="absolute right-0 top-0 bottom-24 w-1/2">
+        <div className="relative w-full h-full overflow-hidden">
+          <Image
+            src={imgs[0].featuredImage!.url}
+            alt={imgs[0].featuredImage!.altText ?? imgs[0].title}
+            fill className="object-cover object-top"
+            sizes="50vw" quality={90} draggable={false} priority
+          />
+        </div>
+      </div>
+    )
+  }
+
   // 1 image — landscape or portrait frame depending on slide config
   return (
     <div className="absolute inset-0 bottom-24 flex items-center justify-center px-8 lg:px-16">
@@ -271,7 +287,8 @@ export default function Hero({ products }: HeroProps) {
 
   return (
     <section
-      className="relative h-screen min-h-[600px] overflow-hidden bg-lm-surface dark:bg-dm-bg select-none cursor-grab active:cursor-grabbing"
+      className={`relative h-screen min-h-[600px] overflow-hidden select-none cursor-grab active:cursor-grabbing transition-colors duration-300
+        ${slide.soloOnly ? 'bg-white dark:bg-white' : 'bg-lm-surface dark:bg-dm-bg'}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
