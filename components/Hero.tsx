@@ -14,6 +14,14 @@ interface HeroProps {
 
 const SLIDE_CONFIGS = [
   {
+    id: 'featured',
+    category: 'Featured',
+    subtitle: 'Selected work',
+    shopHref: '/shop',
+    keywords: ['featured'],
+    soloOnly: true,
+  },
+  {
     id: 'nature',
     category: 'Nature',
     subtitle: 'The world, beautifully lit',
@@ -72,6 +80,7 @@ interface Slide {
   shopHref: string
   products: Product[]
   landscape?: boolean
+  soloOnly?: boolean
 }
 
 function buildSlides(products: Product[]): Slide[] {
@@ -85,7 +94,7 @@ function buildSlides(products: Product[]): Slide[] {
     if (matched.length > 0) {
       // Single product — use the product title as the slide name
       const category = matched.length === 1 ? matched[0].title : config.category
-      slides.push({ ...config, category, products: matched.slice(0, 4), landscape: (config as any).landscape })
+      slides.push({ ...config, category, products: matched.slice(0, 4), landscape: (config as any).landscape, soloOnly: (config as any).soloOnly })
     }
   }
 
@@ -109,8 +118,9 @@ const FRAME = 'border border-white/50 shadow-[0_4px_24px_rgba(0,0,0,0.18)]'
 
 // ── Image layouts ──────────────────────────────────────────────────────────
 
-function ImageLayout({ products, landscape }: { products: Product[]; landscape?: boolean }) {
-  const imgs = products.filter((p) => p.featuredImage).slice(0, 4)
+function ImageLayout({ products, landscape, soloOnly }: { products: Product[]; landscape?: boolean; soloOnly?: boolean }) {
+  const all = products.filter((p) => p.featuredImage)
+  const imgs = soloOnly ? all.slice(0, 1) : all.slice(0, 4)
 
   // No products — ghost placeholder frames
   if (imgs.length === 0) {
@@ -271,7 +281,7 @@ export default function Hero({ products }: HeroProps) {
         key={contentKey.current}
         className={`absolute inset-0 transition-opacity duration-[240ms] hero-slide-in ${fading ? 'opacity-0' : 'opacity-100'}`}
       >
-        <ImageLayout products={slide.products} landscape={slide.landscape} />
+        <ImageLayout products={slide.products} landscape={slide.landscape} soloOnly={slide.soloOnly} />
       </div>
 
       {/* Text bar — always on clean background, always readable */}
