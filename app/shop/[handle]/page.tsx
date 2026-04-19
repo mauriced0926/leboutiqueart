@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation'
 import AddToCartButton from '@/components/AddToCartButton'
 import VariantSelector from '@/components/VariantSelector'
 import ShareButtons from '@/components/ShareButtons'
-import CollapsibleDescription from '@/components/CollapsibleDescription'
+import CollapsibleSection from '@/components/CollapsibleSection'
 
 export const revalidate = 60
 
@@ -108,12 +108,13 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
 
             {/* Description */}
             {product.description && (
-              <CollapsibleDescription description={product.description} />
+              <CollapsibleSection label="Description">
+                <p className="text-lm-muted dark:text-dm-muted text-sm leading-relaxed">{product.description}</p>
+              </CollapsibleSection>
             )}
 
-            {/* Print details */}
-            <div className="border-t border-lm-border dark:border-dm-border pt-7">
-              <p className="text-[10px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted mb-5">Print Details</p>
+            {/* Certificate of Authenticity */}
+            <CollapsibleSection label="Certificate of Authenticity">
               <div className="flex flex-col gap-3">
                 {[
                   { label: 'Production', value: 'Produced by Whitewall — world\'s leading fine art lab' },
@@ -127,7 +128,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
                   </div>
                 ))}
               </div>
-            </div>
+            </CollapsibleSection>
 
             {/* Share */}
             <ShareButtons
