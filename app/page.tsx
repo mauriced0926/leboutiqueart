@@ -66,6 +66,50 @@ export default async function HomePage() {
         <hr className="border-lm-border dark:border-dm-border" />
       </div>
 
+      {/* The Shape of Becoming — collection teaser */}
+      <section className="border-y border-lm-border dark:border-dm-border py-20 bg-lm-surface dark:bg-dm-surface">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-center">
+            <div>
+              <p className="text-[10px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted mb-4">
+                A Collection by Maicol Diaz
+              </p>
+              <h2 className="font-serif text-5xl md:text-6xl lg:text-7xl text-lm-text dark:text-dm-text leading-[0.9] mb-8">
+                The Shape<br />of Becoming
+              </h2>
+              <p className="text-lm-muted dark:text-dm-muted text-sm leading-relaxed mb-10 max-w-sm">
+                A visual progression through identity, tension, and transformation — across seven chapters from origin to resolution.
+              </p>
+              <Link
+                href="/collections/the-shape-of-becoming"
+                className="inline-block border border-lm-text dark:border-dm-text text-lm-text dark:text-dm-text text-[11px] tracking-ultra uppercase px-10 py-3.5 hover:bg-lm-text hover:text-lm-bg dark:hover:bg-dm-text dark:hover:text-dm-bg transition-all duration-300"
+              >
+                Explore Collection
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-px bg-lm-border dark:bg-dm-border border border-lm-border dark:border-dm-border">
+              {['01 Origin', '02 Fracture', '03 Release', '04 Perception', '05 Pursuit', '06 Arrival', '07 Resolution', ''].map((label, i) => (
+                <div key={i} className="bg-lm-surface dark:bg-dm-surface px-5 py-4">
+                  {label ? (
+                    <>
+                      <span className="font-serif text-gold text-xs">{label.split(' ')[0]}</span>
+                      <p className="font-serif text-lm-text dark:text-dm-text text-sm mt-0.5">{label.split(' ')[1]}</p>
+                    </>
+                  ) : (
+                    <p className="text-[9px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted opacity-40 pt-1">7 chapters</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Divider */}
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16">
+        <hr className="border-lm-border dark:border-dm-border" />
+      </div>
+
       {/* Artist bio section */}
       <section className="max-w-7xl mx-auto px-6 lg:px-12 pb-24 grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 items-center">
         <div>

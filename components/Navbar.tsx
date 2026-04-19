@@ -32,6 +32,9 @@ export default function Navbar() {
             <Link href="/shop" className="hidden md:block text-[11px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted hover:text-lm-text dark:hover:text-dm-text transition-colors duration-300">
               Shop
             </Link>
+            <Link href="/collections/the-shape-of-becoming" className="hidden md:block text-[11px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted hover:text-lm-text dark:hover:text-dm-text transition-colors duration-300">
+              Collections
+            </Link>
             <Link href="/about" className="hidden md:block text-[11px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted hover:text-lm-text dark:hover:text-dm-text transition-colors duration-300">
               About
             </Link>
@@ -75,6 +78,7 @@ export default function Navbar() {
       {menuOpen && (
         <div className="fixed inset-0 z-40 bg-lm-bg dark:bg-dm-bg flex flex-col items-center justify-center gap-10">
           <Link href="/shop" onClick={() => setMenuOpen(false)} className="font-serif text-4xl text-lm-text dark:text-dm-text hover:text-gold transition-colors">Shop</Link>
+          <Link href="/collections/the-shape-of-becoming" onClick={() => setMenuOpen(false)} className="font-serif text-4xl text-lm-text dark:text-dm-text hover:text-gold transition-colors">Collections</Link>
           <Link href="/about" onClick={() => setMenuOpen(false)} className="font-serif text-4xl text-lm-text dark:text-dm-text hover:text-gold transition-colors">About</Link>
           <Link href="/contact" onClick={() => setMenuOpen(false)} className="font-serif text-4xl text-lm-text dark:text-dm-text hover:text-gold transition-colors">Contact</Link>
         </div>
