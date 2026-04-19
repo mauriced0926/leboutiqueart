@@ -102,7 +102,7 @@ function ImageLayout({ products }: { products: Product[] }) {
   // No products — ghost placeholder panels
   if (imgs.length === 0) {
     return (
-      <div className="absolute inset-x-0 top-20 bottom-24 flex items-center justify-center gap-5 px-12">
+      <div className="absolute inset-x-0 top-0 bottom-24 flex items-center justify-center gap-5 px-12">
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
@@ -116,7 +116,7 @@ function ImageLayout({ products }: { products: Product[] }) {
   // 4 images — full-width equal strips (gallery wall)
   if (imgs.length === 4) {
     return (
-      <div className="absolute inset-x-0 top-20 bottom-24 flex gap-[2px]">
+      <div className="absolute inset-x-0 top-0 bottom-24 flex gap-[2px]">
         {imgs.map((p) => (
           <div key={p.id} className="relative flex-1 overflow-hidden">
             <Image
@@ -138,7 +138,7 @@ function ImageLayout({ products }: { products: Product[] }) {
   // 3 images — large left + two stacked right
   if (imgs.length === 3) {
     return (
-      <div className="absolute inset-x-0 top-20 bottom-24 flex items-center justify-center gap-4 px-10">
+      <div className="absolute inset-x-0 top-0 bottom-24 flex items-center justify-center gap-4 px-10">
         <div className="relative h-[78%] aspect-[2/3] overflow-hidden shadow-lg dark:shadow-2xl flex-shrink-0">
           <Image
             src={imgs[0].featuredImage!.url}
@@ -164,7 +164,7 @@ function ImageLayout({ products }: { products: Product[] }) {
   // 2 images — staggered duo
   if (imgs.length === 2) {
     return (
-      <div className="absolute inset-x-0 top-20 bottom-24 flex items-center justify-center gap-5 px-16">
+      <div className="absolute inset-x-0 top-0 bottom-24 flex items-center justify-center gap-5 px-16">
         {imgs.map((p, i) => (
           <div
             key={p.id}
@@ -189,12 +189,12 @@ function ImageLayout({ products }: { products: Product[] }) {
 
   // 1 image — fills the right half of the hero, edge to edge
   return (
-    <div className="absolute right-0 top-20 bottom-24 w-1/2 md:w-[52%]">
+    <div className="absolute right-0 top-0 bottom-24 w-1/2 md:w-[52%]">
       <div className="relative w-full h-full overflow-hidden">
         <Image
           src={imgs[0].featuredImage!.url}
           alt={imgs[0].featuredImage!.altText ?? imgs[0].title}
-          fill className="object-cover object-center" sizes="(max-width: 768px) 100vw, 55vw"
+          fill className="object-cover object-top" sizes="(max-width: 768px) 100vw, 55vw"
           quality={90} draggable={false} priority
         />
       </div>
