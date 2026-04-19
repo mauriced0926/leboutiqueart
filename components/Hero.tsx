@@ -191,16 +191,16 @@ function ImageLayout({ products, landscape, soloOnly }: { products: Product[]; l
     )
   }
 
-  // soloOnly — fills the entire right half, edge to edge
+  // soloOnly — full bleed, fills the entire hero
   if (soloOnly) {
     return (
-      <div className="absolute right-0 top-0 bottom-24 w-1/2">
+      <div className="absolute inset-0 bottom-24">
         <div className="relative w-full h-full overflow-hidden">
           <Image
             src={imgs[0].featuredImage!.url}
             alt={imgs[0].featuredImage!.altText ?? imgs[0].title}
-            fill className="object-contain object-center"
-            sizes="50vw" quality={90} draggable={false} priority
+            fill className="object-cover object-center"
+            sizes="100vw" quality={90} draggable={false} priority
           />
         </div>
       </div>
@@ -288,7 +288,7 @@ export default function Hero({ products }: HeroProps) {
   return (
     <section
       className={`relative h-screen min-h-[600px] overflow-hidden select-none cursor-grab active:cursor-grabbing transition-colors duration-300
-        ${slide.soloOnly ? 'bg-white dark:bg-white' : 'bg-lm-surface dark:bg-dm-bg'}`}
+        bg-lm-surface dark:bg-dm-bg`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
