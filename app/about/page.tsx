@@ -25,9 +25,8 @@ export default function AboutPage() {
 
         {/* Header */}
         <div className="mb-20 border-b border-lm-border dark:border-dm-border pb-12">
-          <p className="text-[10px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted mb-4">The Artist</p>
-          <h1 className="font-serif text-5xl md:text-7xl text-lm-text dark:text-dm-text">Maicol Diaz</h1>
-          <p className="text-lm-muted dark:text-dm-muted text-sm mt-4">Miami · New York City · Los Angeles</p>
+          <p className="text-[10px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted mb-4">Le Boutique Art</p>
+          <h1 className="font-serif text-5xl md:text-7xl text-lm-text dark:text-dm-text">About the Craft</h1>
         </div>
 
         {/* Main bio grid */}
@@ -36,7 +35,7 @@ export default function AboutPage() {
           {/* Quote */}
           <div>
             <blockquote className="font-serif text-2xl md:text-3xl text-lm-text dark:text-dm-text leading-relaxed italic border-l-2 border-gold pl-8 mb-10">
-              &ldquo;His edgy, artistic lighting techniques sculpt dimension, mood, and presence — bringing subjects to life in a way that feels both cinematic and intentional.&rdquo;
+              &ldquo;Decades of work, presented to rich new viewers of the world.&rdquo;
             </blockquote>
             <Link
               href="/shop"
@@ -49,16 +48,16 @@ export default function AboutPage() {
           {/* Bio text */}
           <div className="flex flex-col gap-5 text-sm text-lm-muted dark:text-dm-muted leading-relaxed">
             <p>
-              Maicol Diaz is a Colombian-born visual artist and commercial photographer whose work is defined by bold lighting, cultural influence, and striking visual storytelling.
+              Offering an exclusive collection of limited-edition photographic prints. Decades of work, presented to rich new viewers of the world. This gallery of photographs and paintings from around the world features editorial-style compositions that depict contemporary themes and add immense character to clients&apos; interiors.
             </p>
             <p>
-              He spent his early childhood in New York and was raised in Miami, developing a deep appreciation for diverse cultures, perspectives, and creative expression that shapes every frame he creates.
+              Founder Maicol Diaz is sharing his extensive experience with photography, providing access to previously unseen photographs and a curated collection for a loyal audience. You&apos;re invited to browse the online gallery at leisure. Once a client has fallen in love with a work, they can select their desired size, border, and framing options or submit a custom print request.
             </p>
             <p>
-              Earning a full scholarship to a Visual Arts Honors Conservatory program, Diaz built a strong multidisciplinary foundation in fine arts, graphic design, photography, and film — a breadth of training that gives his work its distinctive layered quality.
+              Each print is produced using the most up-to-date printing, framing, acrylic, and archival glass components. The result is a bespoke piece of art that will enhance the client&apos;s personal collection and refine their space for years to come.
             </p>
             <p>
-              His approach blends conceptual depth with clean, high-impact commercial appeal. Known for his mastery of lighting techniques that sculpt dimension, mood, and presence, his work balances technical precision with creative edge — imagery that is both cinematic and intentional.
+              Over the past decade, Maicol has established a reputation for offering an elevated and curated selection of prints which interior designers and the public can trust to reflect a keen eye for photographic talent and elevated service. We look to become a go-to source for everyday clients and devoted art collectors, who enjoy the gallery&apos;s exclusive print offerings, custom framing options, and secure delivery.
             </p>
           </div>
         </div>

@@ -28,12 +28,15 @@ export default function Navbar() {
       }`}>
         <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
 
-          {/* Left nav */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link href="/shop" className="text-[11px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted hover:text-lm-text dark:hover:text-dm-text transition-colors duration-300">
+          {/* Left nav — desktop links + mobile theme toggle */}
+          <div className="flex items-center gap-8">
+            <div className="md:hidden">
+              <ThemeToggle />
+            </div>
+            <Link href="/shop" className="hidden md:block text-[11px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted hover:text-lm-text dark:hover:text-dm-text transition-colors duration-300">
               Shop
             </Link>
-            <Link href="/about" className="text-[11px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted hover:text-lm-text dark:hover:text-dm-text transition-colors duration-300">
+            <Link href="/about" className="hidden md:block text-[11px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted hover:text-lm-text dark:hover:text-dm-text transition-colors duration-300">
               About
             </Link>
           </div>
@@ -45,7 +48,9 @@ export default function Navbar() {
 
           {/* Right actions */}
           <div className="flex items-center gap-5 ml-auto">
-            <ThemeToggle />
+            <div className="hidden md:block">
+              <ThemeToggle />
+            </div>
             <button
               onClick={openCart}
               className="relative text-lm-text dark:text-dm-text hover:text-gold transition-colors duration-300"

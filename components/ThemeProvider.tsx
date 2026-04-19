@@ -16,8 +16,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const stored = (localStorage.getItem('lba_theme') as Theme) ||
-      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    const stored = (localStorage.getItem('lba_theme') as Theme) || 'light'
     setTheme(stored)
     document.documentElement.classList.toggle('dark', stored === 'dark')
     setMounted(true)
