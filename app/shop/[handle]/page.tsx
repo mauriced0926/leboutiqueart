@@ -133,6 +133,21 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
               </p>
             </CollapsibleSection>
 
+            {/* Shipping Information */}
+            <CollapsibleSection label="Shipping Information">
+              <div className="flex flex-col gap-4 text-lm-muted dark:text-dm-muted text-sm leading-relaxed">
+                <p>
+                  Photographs purchased on Le Boutique Art will arrive carefully packed in either reinforced tubes (prints) or flat boxes (prints finished in a frame or acrylic mounting). Larger pieces (30x45 and larger) may arrive in a crate to protect against damage during transit.
+                </p>
+                <p>
+                  Le Boutique Art seeks to ship just the print orders within 7 business days and framed or acrylic mounted orders within 14 business days. Please allow an additional 2–5 days for shipping. If you have any questions on the status of your order, please contact{' '}
+                  <a href="mailto:leboutiqueart@gmail.com" className="text-lm-text dark:text-dm-text hover:text-gold transition-colors">
+                    leboutiqueart@gmail.com
+                  </a>
+                </p>
+              </div>
+            </CollapsibleSection>
+
             {/* Share */}
             <ShareButtons
               url={`https://leboutiqueart.com/shop/${handle}`}
