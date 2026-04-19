@@ -24,7 +24,9 @@ export default function VariantSelector({ product }: VariantSelectorProps) {
     <div className="flex flex-col gap-6">
       {/* Live price — updates on variant change */}
       <p className="text-2xl text-lm-text dark:text-dm-text">
-        {formatPrice(selectedVariant?.price ?? product.price, product.currencyCode)}
+        {selectedVariant
+          ? formatPrice(selectedVariant.price.amount, selectedVariant.price.currencyCode)
+          : formatPrice(product.price, product.currencyCode)}
       </p>
 
       {product.options.map((option) => (
