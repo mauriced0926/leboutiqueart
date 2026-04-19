@@ -132,12 +132,12 @@ function ImageLayout({ products, landscape, soloOnly }: { products: Product[]; l
           {imgs.map((p, i) => (
             <div
               key={p.id}
-              className={`relative flex-1 overflow-hidden ${FRAME} ${i >= 2 ? 'hidden lg:block' : ''}`}
+              className={`relative flex-1 overflow-hidden ${FRAME} bg-lm-surface dark:bg-dm-surface ${i >= 2 ? 'hidden lg:block' : ''}`}
             >
               <Image
                 src={p.featuredImage!.url}
                 alt={p.featuredImage!.altText ?? p.title}
-                fill className="object-contain object-center"
+                fill className="object-cover object-center"
                 sizes="(max-width: 1024px) 50vw, 25vw" quality={90} draggable={false} priority
               />
             </div>
