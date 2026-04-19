@@ -126,21 +126,21 @@ function ImageLayout({ products }: { products: Product[] }) {
     </div>
   )
 
-  // 4 images — framed row: 2 on mobile, 4 on desktop
+  // 4 images — framed row: 2 on mobile/tablet, 4 on desktop
   if (imgs.length === 4) {
     return (
-      <div className="absolute inset-0 bottom-24 flex items-center justify-center gap-2 md:gap-3 px-6 md:px-10 lg:px-16">
-        <div className="flex gap-2 md:gap-3 w-full" style={{ height: '68%' }}>
+      <div className="absolute inset-0 bottom-24 flex items-center justify-center gap-2 lg:gap-3 px-6 lg:px-16">
+        <div className="flex gap-2 lg:gap-3 w-full" style={{ height: '68%' }}>
           {imgs.map((p, i) => (
             <div
               key={p.id}
-              className={`relative flex-1 overflow-hidden ${FRAME} ${i >= 2 ? 'hidden md:block' : ''}`}
+              className={`relative flex-1 overflow-hidden ${FRAME} ${i >= 2 ? 'hidden lg:block' : ''}`}
             >
               <Image
                 src={p.featuredImage!.url}
                 alt={p.featuredImage!.altText ?? p.title}
                 fill className="object-cover object-top"
-                sizes="(max-width: 768px) 50vw, 25vw" quality={90} draggable={false} priority
+                sizes="(max-width: 1024px) 50vw, 25vw" quality={90} draggable={false} priority
               />
             </div>
           ))}
@@ -152,9 +152,9 @@ function ImageLayout({ products }: { products: Product[] }) {
   // 3 images — show 1 on mobile, all 3 on desktop
   if (imgs.length === 3) {
     return (
-      <div className="absolute inset-0 bottom-24 flex items-center justify-center gap-3 px-6 md:px-14">
-        <Img p={imgs[0]} className="h-[60%] md:h-[64%] aspect-[2/3]" />
-        <div className="hidden md:flex flex-col gap-3 h-[64%]">
+      <div className="absolute inset-0 bottom-24 flex items-center justify-center gap-3 px-6 lg:px-14">
+        <Img p={imgs[0]} className="h-[60%] lg:h-[64%] aspect-[2/3]" />
+        <div className="hidden lg:flex flex-col gap-3 h-[64%]">
           <Img p={imgs[1]} className="flex-1 aspect-[2/3]" />
           <Img p={imgs[2]} className="flex-1 aspect-[2/3]" />
         </div>
@@ -165,9 +165,9 @@ function ImageLayout({ products }: { products: Product[] }) {
   // 2 images — show 1 on mobile, staggered duo on desktop
   if (imgs.length === 2) {
     return (
-      <div className="absolute inset-0 bottom-24 flex items-center justify-center gap-4 px-6 md:px-20">
-        <Img p={imgs[0]} className="h-[60%] md:h-[62%] aspect-[2/3] md:self-start md:mt-[6%]" />
-        <Img p={imgs[1]} className="hidden md:block h-[52%] aspect-[2/3] self-end mb-[6%]" />
+      <div className="absolute inset-0 bottom-24 flex items-center justify-center gap-4 px-6 lg:px-20">
+        <Img p={imgs[0]} className="h-[60%] lg:h-[62%] aspect-[2/3] lg:self-start lg:mt-[6%]" />
+        <Img p={imgs[1]} className="hidden lg:block h-[52%] aspect-[2/3] self-end mb-[6%]" />
       </div>
     )
   }
