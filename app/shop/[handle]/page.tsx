@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import AddToCartButton from '@/components/AddToCartButton'
 import VariantSelector from '@/components/VariantSelector'
 import ShareButtons from '@/components/ShareButtons'
+import CollapsibleDescription from '@/components/CollapsibleDescription'
 
 export const revalidate = 60
 
@@ -107,10 +108,7 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
 
             {/* Description */}
             {product.description && (
-              <div className="border-t border-lm-border dark:border-dm-border pt-7 mb-7">
-                <p className="text-[10px] tracking-ultra uppercase text-lm-muted dark:text-dm-muted mb-4">About This Work</p>
-                <p className="text-lm-muted dark:text-dm-muted text-sm leading-relaxed">{product.description}</p>
-              </div>
+              <CollapsibleDescription description={product.description} />
             )}
 
             {/* Print details */}
