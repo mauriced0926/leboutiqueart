@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import AddToCartButton from '@/components/AddToCartButton'
 import VariantSelector from '@/components/VariantSelector'
+import ShareButtons from '@/components/ShareButtons'
 
 export const revalidate = 60
 
@@ -129,6 +130,13 @@ export default async function ProductPage({ params }: { params: Promise<{ handle
                 ))}
               </div>
             </div>
+
+            {/* Share */}
+            <ShareButtons
+              url={`https://leboutiqueart.com/shop/${handle}`}
+              title={product.title}
+              imageUrl={product.featuredImage?.url}
+            />
           </div>
         </div>
       </div>
