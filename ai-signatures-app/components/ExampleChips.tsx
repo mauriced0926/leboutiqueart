@@ -17,13 +17,13 @@ It's important to note that this isn't about replacing human creativity, but rat
 
 export default function ExampleChips({ onPick }: { onPick: (text: string) => void }) {
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-2">
-      <span className="mr-1 font-mono text-[11px] uppercase tracking-widest text-dim">Try:</span>
+    <div className="mt-4 flex flex-wrap items-center gap-2">
+      <span className="mr-1 font-mono text-[11px] uppercase tracking-wide text-dim">Try</span>
       {EXAMPLES.map((e) => (
         <button
           key={e.label}
           onClick={() => onPick(e.text)}
-          className="rounded-full border border-border px-3 py-1 text-xs text-muted transition-colors hover:border-accent-dim hover:text-accent"
+          className="rounded-full border border-border px-3.5 py-1.5 font-display text-xs text-muted transition-colors hover:border-accent hover:text-accent"
         >
           {e.label}
         </button>

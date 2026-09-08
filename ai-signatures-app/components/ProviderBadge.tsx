@@ -8,7 +8,7 @@ export default function ProviderBadge({ provider }: { provider: 'claude' | 'gemi
   return (
     <span
       className="flex h-6 w-6 items-center justify-center rounded-md font-mono text-[11px] font-bold"
-      style={{ backgroundColor: `${m.color}1f`, color: m.color, border: `1px solid ${m.color}55` }}
+      style={{ backgroundColor: `${m.color}17`, color: m.color }}
     >
       {m.letter}
     </span>

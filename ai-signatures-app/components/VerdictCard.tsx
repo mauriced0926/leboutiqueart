@@ -3,24 +3,20 @@ import ConfidenceGauge from './ConfidenceGauge'
 
 export default function VerdictCard({ final }: { final: FinalVerdict }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border-hi bg-surface p-6 sm:p-7">
-      <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-accent/10 blur-3xl" />
+    <div className="flex flex-col items-center gap-6 rounded-2xl bg-surface p-8 shadow-card sm:flex-row sm:items-center sm:p-9">
+      <ConfidenceGauge value={final.confidence} ring="accent" />
 
-      <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
-        <ConfidenceGauge value={final.confidence} ring="accent" />
-
-        <div className="min-w-0 flex-1">
-          <div className="font-mono text-[11px] uppercase tracking-widest text-accent">
-            Ensemble verdict
-          </div>
-          <div className="mt-1 text-2xl font-semibold sm:text-3xl">{final.label}</div>
-          <p className="mt-3 text-sm leading-relaxed text-text/80">{final.summary}</p>
-          {final.caveats && (
-            <p className="mt-3 border-l-2 border-warn/40 pl-3 font-mono text-xs leading-relaxed text-muted">
-              {final.caveats}
-            </p>
-          )}
+      <div className="min-w-0 flex-1 text-center sm:text-left">
+        <div className="font-mono text-[11px] uppercase tracking-wide text-accent">
+          Ensemble verdict
         </div>
+        <div className="mt-1 font-display text-[28px] font-semibold text-text">{final.label}</div>
+        <p className="mx-auto mt-2.5 max-w-xl text-[14.5px] leading-relaxed text-muted sm:mx-0">
+          {final.summary}
+        </p>
+        {final.caveats && (
+          <p className="mt-3 font-mono text-xs leading-relaxed text-dim">{final.caveats}</p>
+        )}
       </div>
     </div>
   )

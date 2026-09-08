@@ -10,41 +10,28 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: '#05070a',
-        surface: '#0c1017',
-        surface2: '#121824',
-        border: '#1e2733',
-        'border-hi': '#2c3849',
-        text: '#eef1f6',
-        muted: '#7c8798',
-        dim: '#4b5563',
-        accent: '#5eead4',
-        'accent-dim': '#0f766e',
+        bg: '#faf9f7',
+        surface: '#ffffff',
+        'border-soft': '#efeeea',
+        border: '#e5e3df',
+        text: '#141414',
+        muted: '#5c5c58',
+        dim: '#adada8',
+        track: '#eeece7',
+        accent: 'oklch(55% 0.09 220)',
+        'accent-soft': 'oklch(55% 0.09 220 / 0.08)',
         claude: '#e08a5e',
         gemini: '#5b9dff',
-        good: '#34d399',
-        warn: '#fbbf24',
-        bad: '#f87171',
+        warn: 'oklch(65% 0.15 70)',
+        bad: '#d9483f',
       },
       fontFamily: {
+        sans: ['var(--font-body)', 'system-ui', 'sans-serif'],
         display: ['var(--font-display)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
-      backgroundImage: {
-        'dot-grid':
-          'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)',
-      },
-      backgroundSize: {
-        grid: '22px 22px',
-      },
-      keyframes: {
-        'pulse-dot': {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.35' },
-        },
-      },
-      animation: {
-        'pulse-dot': 'pulse-dot 1.6s ease-in-out infinite',
+      boxShadow: {
+        card: '0 1px 2px rgba(20,20,20,0.04), 0 8px 24px -8px rgba(20,20,20,0.08)',
       },
     },
   },

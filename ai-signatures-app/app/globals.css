@@ -4,25 +4,12 @@
 
 html,
 body {
-  background-color: #05070a;
-  color: #eef1f6;
-}
-
-body {
-  font-family: var(--font-display), system-ui, sans-serif;
-  background-image:
-    radial-gradient(ellipse 900px 500px at 50% -10%, rgba(94, 234, 212, 0.08), transparent),
-    radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size:
-    100% 100%,
-    24px 24px;
-  background-repeat: no-repeat, repeat;
-  background-attachment: fixed;
+  background-color: #faf9f7;
+  color: #141414;
 }
 
 ::selection {
-  background-color: #5eead444;
-  color: #eef1f6;
+  background-color: oklch(55% 0.09 220 / 0.16);
 }
 
 ::-webkit-scrollbar {
@@ -32,7 +19,7 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e2733;
+  background: #e5e3df;
   border-radius: 999px;
 }
 
