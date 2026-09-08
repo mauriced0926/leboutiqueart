@@ -1,29 +1,38 @@
 import { JudgeVerdict } from '@/lib/types'
+import ProviderBadge, { providerName } from './ProviderBadge'
 import ConfidenceBar from './ConfidenceBar'
 
-const PROVIDER_META = {
-  claude: { name: 'Claude', colorClass: 'bg-claude', dot: 'bg-claude' },
-  gemini: { name: 'Gemini', colorClass: 'bg-gemini', dot: 'bg-gemini' },
+const BAR_COLOR: Record<JudgeVerdict['provider'], string> = {
+  claude: 'bg-claude',
+  gemini: 'bg-gemini',
 }
 
 export default function JudgeCard({ verdict }: { verdict: JudgeVerdict }) {
-  const meta = PROVIDER_META[verdict.provider]
   return (
     <div className="rounded-xl border border-border bg-surface p-5">
-      <div className="flex items-center gap-2">
-        <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
-        <span className="text-sm font-medium text-muted">{meta.name} judge</span>
+      <div className="flex items-center gap-2.5">
+        <ProviderBadge provider={verdict.provider} />
+        <span className="font-mono text-[11px] uppercase tracking-widest text-muted">
+          {providerName(verdict.provider)} judge
+        </span>
       </div>
-      <div className="mt-2 text-lg font-semibold">{verdict.label}</div>
-      <div className="mt-2">
-        <ConfidenceBar value={verdict.confidence} colorClass={meta.colorClass} />
+
+      <div className="mt-3 text-lg font-semibold">{verdict.label}</div>
+
+      <div className="mt-3 flex items-center gap-2">
+        <ConfidenceBar value={verdict.confidence} colorClass={BAR_COLOR[verdict.provider]} />
+        <span className="font-mono text-xs tabular-nums text-muted">{verdict.confidence}%</span>
       </div>
-      <div className="mt-1 text-xs text-muted">{verdict.confidence}% confidence</div>
-      <p className="mt-3 text-sm leading-relaxed text-text/85">{verdict.reasoning}</p>
+
+      <p className="mt-3 text-sm leading-relaxed text-text/80">{verdict.reasoning}</p>
+
       {verdict.quotedEvidence.length > 0 && (
         <div className="mt-3 space-y-1.5">
           {verdict.quotedEvidence.map((q, i) => (
-            <div key={i} className="rounded-md bg-black/30 px-2.5 py-1.5 text-xs italic text-muted">
+            <div
+              key={i}
+              className="rounded-md border border-border bg-bg/60 px-2.5 py-1.5 font-mono text-[11px] text-muted"
+            >
               &ldquo;{q}&rdquo;
             </div>
           ))}

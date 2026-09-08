@@ -4,10 +4,38 @@
 
 html,
 body {
-  background-color: #0b0d12;
-  color: #e8eaed;
+  background-color: #05070a;
+  color: #eef1f6;
+}
+
+body {
+  font-family: var(--font-display), system-ui, sans-serif;
+  background-image:
+    radial-gradient(ellipse 900px 500px at 50% -10%, rgba(94, 234, 212, 0.08), transparent),
+    radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    24px 24px;
+  background-repeat: no-repeat, repeat;
+  background-attachment: fixed;
 }
 
 ::selection {
-  background-color: #7c9eff44;
+  background-color: #5eead444;
+  color: #eef1f6;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e2733;
+  border-radius: 999px;
+}
+
+.font-mono-tabular {
+  font-variant-numeric: tabular-nums;
 }

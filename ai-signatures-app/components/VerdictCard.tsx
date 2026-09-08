@@ -1,21 +1,27 @@
 import { FinalVerdict } from '@/lib/types'
-import ConfidenceBar from './ConfidenceBar'
+import ConfidenceGauge from './ConfidenceGauge'
 
 export default function VerdictCard({ final }: { final: FinalVerdict }) {
   return (
-    <div className="rounded-2xl border border-border bg-surface p-6">
-      <div className="text-xs uppercase tracking-widest text-muted">Ensemble verdict</div>
-      <div className="mt-2 flex items-baseline gap-3">
-        <span className="text-3xl font-semibold">{final.label}</span>
-        <span className="text-lg text-muted">{final.confidence}% confidence</span>
+    <div className="relative overflow-hidden rounded-2xl border border-border-hi bg-surface p-6 sm:p-7">
+      <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-accent/10 blur-3xl" />
+
+      <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
+        <ConfidenceGauge value={final.confidence} ring="accent" />
+
+        <div className="min-w-0 flex-1">
+          <div className="font-mono text-[11px] uppercase tracking-widest text-accent">
+            Ensemble verdict
+          </div>
+          <div className="mt-1 text-2xl font-semibold sm:text-3xl">{final.label}</div>
+          <p className="mt-3 text-sm leading-relaxed text-text/80">{final.summary}</p>
+          {final.caveats && (
+            <p className="mt-3 border-l-2 border-warn/40 pl-3 font-mono text-xs leading-relaxed text-muted">
+              {final.caveats}
+            </p>
+          )}
+        </div>
       </div>
-      <div className="mt-4">
-        <ConfidenceBar value={final.confidence} />
-      </div>
-      <p className="mt-4 text-sm leading-relaxed text-text/90">{final.summary}</p>
-      {final.caveats && (
-        <p className="mt-3 text-xs leading-relaxed text-muted italic">Caveat: {final.caveats}</p>
-      )}
     </div>
   )
 }
