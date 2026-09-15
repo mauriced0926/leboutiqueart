@@ -39,3 +39,6 @@ next-env.d.ts
 
 # niche research output
 /research-output
+
+# pipeline runtime state (episodes, queue, generated media)
+/pipeline/state
