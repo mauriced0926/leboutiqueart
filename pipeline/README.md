@@ -144,9 +144,22 @@ voice to the series.
 
 `doctor.mjs` checks only the keys your selected providers actually need.
 
-**Rough cost per episode: $0.25–0.35** — dominated by ~5 image generations, with narration
-and the script a few cents. Call it $8–11/month at one a day. Verify against current
-pricing before scaling; these are order-of-magnitude figures, not quotes.
+**Cost: roughly $0.05–0.10 per episode — around $2–3/month at one a day.**
+
+Free tiers cover the media almost entirely at this volume:
+
+| Stage | Free allowance | This channel uses |
+|---|---|---|
+| Images (Gemini Flash image) | ~500 images/day, no card required | ~5/episode |
+| Narration (Cloud TTS, Standard voices) | 4M characters/month | ~200 chars/episode |
+| Script (Claude Opus 5) | none — paid per token | ~$0.05–0.08/episode |
+
+So the script is the only line that reliably costs money. Two things push you off free:
+picking a Pro-tier image model (Gemini 3 Pro Image has **no** free tier at all) or a premium
+voice class (Studio voices are $160/1M chars vs $4 for Standard). Both are opt-in via
+`MEDIA_IMAGE_MODEL` and `MEDIA_TTS_VOICE` — the defaults stay in the free lane.
+
+Figures are order-of-magnitude, not quotes; verify before scaling.
 
 ## Tests
 
