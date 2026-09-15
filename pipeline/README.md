@@ -47,11 +47,40 @@ YOUTUBE_OAUTH_REFRESH_TOKEN=...    # produced by: node pipeline/auth.mjs
 brew install ffmpeg                # or: sudo apt-get install ffmpeg
 ```
 
-Then authorise uploads once:
+### Authorise uploads (once)
 
 ```bash
-node pipeline/auth.mjs
+node pipeline/auth.mjs                    # default port 8765
+node pipeline/auth.mjs --port 9000        # if 8765 is taken
+node pipeline/auth.mjs --client-secrets ~/Downloads/client_secret_....json
 ```
+
+This starts a throwaway local server, opens a consent URL, and catches Google's redirect.
+It writes `YOUTUBE_OAUTH_REFRESH_TOKEN` into `.env.local` on success.
+
+**Before the first run, register the redirect URI.** Google Cloud console → APIs & Services
+→ Credentials → your OAuth client → Authorized redirect URIs → add exactly:
+
+```
+http://localhost:8765/oauth2callback
+```
+
+Two client types behave differently here:
+
+| Client type | Redirect registration |
+|---|---|
+| **Desktop app** | Any loopback port works with no registration — simplest |
+| **Web application** | The exact URI above must be registered, port included |
+
+The current credentials in `.env.local` are a **Web application** client, so the URI must be
+registered. Creating a Desktop-app client instead avoids that step entirely.
+
+Also add your Google account under APIs & Services → OAuth consent screen → Test users,
+unless the app is published — otherwise consent returns `access_denied`.
+
+> The paste-a-code out-of-band flow you'll find in older tutorials
+> (`redirect_uri=urn:ietf:wg:oauth:2.0:oob`) was blocked for every client type in January
+> 2023 and now fails with `invalid_request`. Loopback is its replacement.
 
 ## Daily loop
 
@@ -116,6 +145,10 @@ Guides still quoting 1,600 units per upload are out of date.
 
 **Unverified Google Cloud projects can only upload private/unlisted.** Verify the project
 before expecting `--public` to work.
+
+**A `web` client's secret is genuinely confidential.** Unlike a desktop client (where the
+secret is not treated as a real secret), a web client secret grants token exchange. Keep it
+in `.env.local`, and rotate it in the console if it is ever pasted somewhere shared.
 
 **Daily cadence is a floor, not a target.** If the novelty gate starts rejecting four
 attempts in a row, that is the series telling you an axis is exhausted. Widen the cast or the
