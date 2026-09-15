@@ -103,7 +103,7 @@ await test('treats an unparseable response as a retryable attempt', async () => 
 console.log('\nprompt construction');
 await test('system prompt carries the bible and the hard rules', () => {
   const s = systemPrompt(bible);
-  assert.ok(s.includes("Mango's Fix-It Den"));
+  assert.ok(s.includes("Fix-It Forest"));
   assert.ok(s.includes('physically real'));
 });
 await test('first-episode prompt differs from a later one', () => {

@@ -1,7 +1,28 @@
 {
+  "channel": {
+    "name": "Fix-It Forest",
+    "handle_preferred": "@fixitforest",
+    "handle_fallbacks": [
+      "@fixitforesttv",
+      "@thefixitforest",
+      "@fixitforestkids"
+    ],
+    "tagline": "Little repairs, one at a time.",
+    "description": "In a hollow stump at the edge of the birch wood, Mango the fox runs a very small repair shop.\n\nEvery episode, a friend brings her one broken thing — a wobbly stool, a kite that will not fly, a music box that plays too slowly. Mango works out what went wrong, fixes it, and names the idea that made it work, in words a small child can repeat.\n\nGentle, unhurried stories about noticing, mending, and putting things right. Made for preschoolers and the grown-ups watching with them.\n\nNew repair every day.",
+    "keywords": [
+      "preschool",
+      "toddler stories",
+      "kids animation",
+      "bedtime stories",
+      "learning for toddlers",
+      "gentle kids shows",
+      "problem solving for kids"
+    ],
+    "naming_notes": "Channel is named for the format and setting, not the character, so the cast can widen without a rename. 'Mango' was deliberately kept out of the channel name — the Mango Kids namespace already has several established channels and competing there for search would repeat the nursery-rhyme mistake."
+  },
   "series": {
-    "title": "Mango's Fix-It Den",
-    "logline": "A small fox with a tiny repair shop fixes one broken thing for one forest friend, every day.",
+    "title": "Fix-It Forest",
+    "logline": "In a hollow stump at the edge of the birch wood, a small fox named Mango fixes one broken thing for one forest friend, every day.",
     "why_this_survives_policy": "One authored property with a fixed cast, a fixed visual style and a fixed 5-beat structure. Every episode is a genuinely different repair with a different physical principle, produced against a dedupe gate. That is the opposite of near-duplicate mass production — the standard YouTube's inauthentic-content policy actually enforces.",
     "target_runtime_seconds": 35,
     "runtime_rationale": "Measured median for character-led kids Shorts was 36s (docs/measured/niche-scan-2026-09-15.md).",
@@ -27,12 +48,23 @@
   },
   "world": {
     "setting": "a hollow stump workshop at the edge of a birch wood, lit by one round window",
-    "props_that_recur": ["the pegboard of tools", "the tin of odd buttons", "the rolled twine spool", "the three-legged stool"],
+    "props_that_recur": [
+      "the pegboard of tools",
+      "the tin of odd buttons",
+      "the rolled twine spool",
+      "the three-legged stool"
+    ],
     "time_of_day": "always warm late afternoon — keeps lighting consistent across episodes"
   },
   "visual_style": {
     "medium": "2D storybook gouache, visible paper grain, soft edges",
-    "palette": ["#E86A33", "#F5C26B", "#2F5D50", "#EFE6D3", "#3A3238"],
+    "palette": [
+      "#E86A33",
+      "#F5C26B",
+      "#2F5D50",
+      "#EFE6D3",
+      "#3A3238"
+    ],
     "line": "no hard outlines; forms defined by colour blocks and shadow",
     "camera": "locked-off mid shots and one close-up on the hands at the fix moment",
     "aspect": "1080x1920 vertical",
@@ -43,11 +75,36 @@
     "engine": "One friend brings one broken object. Mango notices one specific cause. She fixes it using one named physical principle. The owner is delighted. The principle is stated once, plainly.",
     "why_it_scales": "The broken object, the cause, the principle and the owner are four independent axes. They generate a very large space of genuinely distinct episodes — unlike a template that swaps only a noun.",
     "beats": [
-      { "n": 1, "name": "arrival", "seconds": 6, "content": "Friend arrives holding the broken thing. We see clearly what is wrong." },
-      { "n": 2, "name": "notice", "seconds": 7, "content": "Mango turns it over and names the actual cause out loud. Close on the fault." },
-      { "n": 3, "name": "fix", "seconds": 14, "content": "The repair, shown as process. Hands, tools, one clear physical principle at work. This is the retention beat — it must be satisfying to watch." },
-      { "n": 4, "name": "test", "seconds": 5, "content": "The object is tested and works. Small, real delight from the owner." },
-      { "n": 5, "name": "name-it", "seconds": 3, "content": "Mango names the principle in one short sentence a 4-year-old can repeat." }
+      {
+        "n": 1,
+        "name": "arrival",
+        "seconds": 6,
+        "content": "Friend arrives holding the broken thing. We see clearly what is wrong."
+      },
+      {
+        "n": 2,
+        "name": "notice",
+        "seconds": 7,
+        "content": "Mango turns it over and names the actual cause out loud. Close on the fault."
+      },
+      {
+        "n": 3,
+        "name": "fix",
+        "seconds": 14,
+        "content": "The repair, shown as process. Hands, tools, one clear physical principle at work. This is the retention beat — it must be satisfying to watch."
+      },
+      {
+        "n": 4,
+        "name": "test",
+        "seconds": 5,
+        "content": "The object is tested and works. Small, real delight from the owner."
+      },
+      {
+        "n": 5,
+        "name": "name-it",
+        "seconds": 3,
+        "content": "Mango names the principle in one short sentence a 4-year-old can repeat."
+      }
     ]
   },
   "hard_rules": [
@@ -61,10 +118,22 @@
   "dedupe_axes": {
     "comment": "Every episode must differ from recent ones on these axes. Enforced by pipeline/lib/registry.mjs, not by trusting the model.",
     "axes": {
-      "broken_object": { "recency_window": 60, "note": "no repeated object within 60 episodes" },
-      "fix_principle": { "recency_window": 25, "note": "no repeated principle within 25 episodes" },
-      "owner": { "recency_window": 6, "note": "rotate who brings the object" },
-      "cause": { "recency_window": 20, "note": "the reason it broke must vary" }
+      "broken_object": {
+        "recency_window": 60,
+        "note": "no repeated object within 60 episodes"
+      },
+      "fix_principle": {
+        "recency_window": 25,
+        "note": "no repeated principle within 25 episodes"
+      },
+      "owner": {
+        "recency_window": 6,
+        "note": "rotate who brings the object"
+      },
+      "cause": {
+        "recency_window": 20,
+        "note": "the reason it broke must vary"
+      }
     },
     "similarity_threshold": 0.62,
     "similarity_note": "Combined trigram+token similarity against every prior premise. Above this, the episode is rejected and regenerated."

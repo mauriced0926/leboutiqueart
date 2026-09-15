@@ -1,4 +1,4 @@
-# Mango's Fix-It Den — automated episode pipeline
+# Fix-It Forest — automated episode pipeline
 
 Daily AI-generated character-led kids Shorts, with a human approval gate.
 
