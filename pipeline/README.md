@@ -112,15 +112,37 @@ Beat images are cached, so a re-run after a failure doesn't regenerate what alre
 
 ### Providers
 
-| Stage | Default | Swap via |
-|---|---|---|
-| Script | Claude `claude-opus-5` | — |
-| Images | Gemini image model | `MEDIA_IMAGE_PROVIDER`, `MEDIA_IMAGE_MODEL` |
-| Narration | Google Cloud TTS | `MEDIA_TTS_PROVIDER`, `MEDIA_TTS_VOICE` |
+| Stage | Default | Alternatives | Select with |
+|---|---|---|---|
+| Script | Claude `claude-opus-5` | — | — |
+| Images | Gemini | OpenAI | `MEDIA_IMAGE_PROVIDER=gemini\|openai` |
+| Narration | Google Cloud TTS | ElevenLabs, OpenAI | `MEDIA_TTS_PROVIDER=google\|elevenlabs\|openai` |
+
+```bash
+# ElevenLabs narration
+MEDIA_TTS_PROVIDER=elevenlabs
+ELEVENLABS_API_KEY=...
+ELEVENLABS_VOICE_ID=...        # the voice ID from your library, not its display name
+
+# OpenAI images
+MEDIA_IMAGE_PROVIDER=openai
+OPENAI_API_KEY=...
+OPENAI_IMAGE_MODEL=...         # model names churn; nothing is guessed for you
+```
 
 Google is the default because this project already has a Google Cloud project for the
-YouTube API — one console, one billing account. Both media functions dispatch on an env
-var, so another provider is a new branch in `lib/media.mjs`, not a rewrite.
+YouTube API — one console, one billing account.
+
+**One real caveat if you pick OpenAI for images:** its generations endpoint takes no
+reference image, so it cannot be conditioned on the character sheet the way the Gemini
+adapter is. Character consistency then rests on the prompt alone, and prompts drift. That
+drift is the most visible sign of machine production. Prefer Gemini for beat images.
+
+**ElevenLabs is the better narration choice on quality**; API-generated audio is
+commercially licensed, but confirm your plan tier covers monetized use before committing a
+voice to the series.
+
+`doctor.mjs` checks only the keys your selected providers actually need.
 
 **Rough cost per episode: $0.25–0.35** — dominated by ~5 image generations, with narration
 and the script a few cents. Call it $8–11/month at one a day. Verify against current
