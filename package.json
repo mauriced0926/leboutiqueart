@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "research:youtube": "node scripts/youtube-niche-research.mjs",
+    "research:youtube:test": "node scripts/youtube-niche-research.test.mjs"
   },
   "dependencies": {
     "next": "15.3.8",

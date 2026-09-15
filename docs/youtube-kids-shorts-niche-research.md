@@ -6,8 +6,8 @@ _Research date: 15 September 2026_
 
 ## 0. Method and its limits (read this first)
 
-This session's network egress blocks `youtube.com` directly, and there is no YouTube Data API
-key configured in this project. So **no live view counts were scraped** — I could not open
+This session's network egress blocks `youtube.com` directly, and no YouTube Data API key was
+configured when this was written. So **no live view counts were scraped** — I could not open
 YouTube search, sort Shorts by views, or pull channel analytics first-hand.
 
 What this document is built on instead:
@@ -193,17 +193,49 @@ toy unboxing (saturated, and increasingly scrutinised as child-directed commerci
 The scoring in §3 is built on published reports, not on first-hand YouTube data. Close that gap
 first — a week of work, not a month:
 
-1. **Get a YouTube Data API v3 key** (free tier is ample). Add `YOUTUBE_API_KEY` to
-   `.env.local`. This removes the blocker described in §0 permanently.
-2. **Pull real numbers** via `search.list` + `videos.list`, for each candidate niche:
-   - median views on Shorts published in the last 30 days, by channel
-   - **views-per-subscriber ratio** — the single best saturation signal; a high ratio means the
-     algorithm is still pushing the niche to non-subscribers
-   - channel age of the top 20 results — if every winner is 5+ years old, the niche is closed to
-     new entrants; if several are under 12 months, it is open
-3. **Ship 20 test Shorts over 3 weeks**, two formats, ~10 each. Judge on retention percentage
+### Step 1 — measure the niches for real
+
+`scripts/youtube-niche-research.mjs` does the measuring. Zero dependencies, runs on plain Node.
+
+```bash
+# 1. Get a free key: console.cloud.google.com → enable "YouTube Data API v3" → API key
+echo 'YOUTUBE_API_KEY=your_key_here' >> .env.local
+
+# 2. Check what the scan will cost before spending any quota
+npm run research:youtube -- --dry-run
+
+# 3. Run it
+npm run research:youtube
+```
+
+Niches and search queries live in `scripts/niches.config.json` — edit that, not the script.
+The full seven-niche scan costs ~1,430 of the 10,000 free daily quota units. Responses are
+cached to disk, so re-runs and resumed runs are nearly free.
+
+What it reports, per niche:
+
+| Metric | Why it decides something |
+|---|---|
+| Median / p90 views | The ceiling the niche is currently paying out |
+| **Views per subscriber** | The saturation signal. Above ~1× the algorithm is pushing past existing audiences, so a channel with no subscribers can still get seen |
+| **New-entrant share** | Share of sampled channels under 12 months old. The strongest available evidence the niche is still open to newcomers |
+| **Made-for-Kids share** | Which monetization regime the niche's winners actually live under — directly tests the §4 recommendation |
+| Median duration, views/day | Format and velocity norms to match |
+
+Two honest caveats the script prints alongside the numbers: `order=viewCount` samples the
+*head* of the distribution, so "median views" is the median of the winners, not of the niche
+(re-run with `--order relevance` for the typical case); and the API has no "is a Short" flag,
+so it post-filters on real parsed duration ≤180s rather than trusting `videoDuration=short`,
+which admits anything under 4 minutes.
+
+`npm run research:youtube:test` runs the analysis pipeline against synthetic data — useful
+for checking a change to the scoring without spending quota.
+
+### Step 2 — test in production
+
+1. **Ship 20 test Shorts over 3 weeks**, two formats, ~10 each. Judge on retention percentage
    and swipe-away rate, *not* on views. Views at 20 uploads are noise.
-4. **Decision gate:** if median retention is under ~60%, the format is wrong — change the format,
+2. **Decision gate:** if median retention is under ~60%, the format is wrong — change the format,
    not the posting frequency.
 
 ---

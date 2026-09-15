@@ -1,0 +1,70 @@
+{
+  "$comment": "Niche definitions for youtube-niche-research.mjs. Each niche runs one search.list call per query (100 quota units each), so keep query lists short. Candidates below mirror docs/youtube-kids-shorts-niche-research.md §3.",
+  "defaults": {
+    "days": 30,
+    "maxPerQuery": 50,
+    "order": "viewCount",
+    "regionCode": "US",
+    "relevanceLanguage": "en"
+  },
+  "niches": [
+    {
+      "name": "parent-facing-kids-art",
+      "label": "Parent-facing kids art & activity (RECOMMENDED)",
+      "queries": [
+        "toddler craft idea",
+        "kids activity at home easy"
+      ]
+    },
+    {
+      "name": "sensory-nonverbal",
+      "label": "Sensory / non-verbal toddler",
+      "queries": [
+        "sensory play toddler",
+        "satisfying kids sensory"
+      ]
+    },
+    {
+      "name": "character-episodic",
+      "label": "Character-led episodic mini-stories",
+      "queries": [
+        "kids cartoon short story",
+        "animated story for kids"
+      ]
+    },
+    {
+      "name": "nursery-rhymes",
+      "label": "Nursery rhymes / songs (incumbent wall)",
+      "queries": [
+        "nursery rhymes",
+        "kids songs for toddlers"
+      ]
+    },
+    {
+      "name": "toy-play",
+      "label": "Toy / unboxing play",
+      "queries": [
+        "toy unboxing kids",
+        "toy play pretend kids"
+      ]
+    },
+    {
+      "name": "ai-story-cartoons",
+      "label": "Generic AI story cartoons (enforcement risk)",
+      "queries": [
+        "ai cartoon for kids",
+        "bedtime story animation kids"
+      ]
+    },
+    {
+      "name": "preschool-learning",
+      "label": "Preschool edutainment (colors/numbers/phonics)",
+      "queries": [
+        "learning colors for toddlers",
+        "preschool phonics for kids"
+      ]
+    }
+  ],
+  "$channelsComment": "Optional: known competitor channels to profile directly. Costs ~3 quota units each instead of 100 — far cheaper than search. Accepts channel IDs (UC...) or @handles.",
+  "channels": []
+}
