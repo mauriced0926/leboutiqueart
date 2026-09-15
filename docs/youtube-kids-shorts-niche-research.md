@@ -6,9 +6,14 @@ _Research date: 15 September 2026_
 
 ## 0. Method and its limits (read this first)
 
-This session's network egress blocks `youtube.com` directly, and no YouTube Data API key was
-configured when this was written. So **no live view counts were scraped** — I could not open
-YouTube search, sort Shorts by views, or pull channel analytics first-hand.
+**Update (15 Sept 2026): §1–§4 below were written from secondary sources; the niches have
+since been measured against the live YouTube Data API.** See **§3.5** for the measured results,
+including two places where the data does not support what §3/§4 originally claimed. The raw
+report is in [`docs/measured/niche-scan-2026-09-15.md`](measured/niche-scan-2026-09-15.md).
+
+The original limitation, for the record: this session's network egress blocks `youtube.com`
+directly (it still does — the API is reached via `googleapis.com`), and no API key was
+configured when §1–§4 were written.
 
 What this document is built on instead:
 
@@ -131,6 +136,74 @@ kids audiences in 2026. Cost and timeline are the problem — this is a 12-month
 
 ---
 
+## 3.5 Measured data (15 Sept 2026)
+
+Scan parameters: Shorts (≤180s) published in the last 30 days, sampled by `order=viewCount`,
+region US, 2 queries per niche, n≈58–100 per niche, 1,423 quota units.
+
+| Niche | n | Median views | Views/sub | New <12mo | Micro (<10k subs) | Median ch. age | MFK | Openness |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Character-led episodic | 84 | 897.8K | 88.7× | 65% | 52% | 8mo | 45% | 86 |
+| Generic AI story cartoons | 89 | 642.6K | 102.0× | 56% | 69% | 8mo | 28% | 83 |
+| Preschool edutainment | 80 | 198.4K | 20.9× | 40% | 46% | 17mo | 84% | 76 |
+| Nursery rhymes / songs | 58 | **4.0M** | 10.7× | 18% | 16% | 41mo | 98% | 67 |
+| **Parent-facing kids art** | 93 | 368.3K | 6.6× | 28% | 30% | 26mo | 24% | 62 |
+| Sensory / non-verbal | 100 | **10.3K** | 4.7× | 29% | 68% | 35mo | 6% | 55 |
+| Toy / unboxing play | 93 | 793.5K | **0.47×** | 23% | 9% | 39mo | 26% | 19 |
+
+### What the data confirms
+
+**Toy/unboxing is closed — decisively.** The only niche with views-per-subscriber **below 1×**
+(0.47×), just 9% micro-channels and a median channel age of 39 months. Reach in this niche goes
+to channels that already have an audience. A new entrant is invisible here. §3 scored it 12/35;
+that was, if anything, generous.
+
+**Nursery rhymes is the incumbent wall, exactly as described.** Highest median views in the scan
+by a wide margin (4.0M) — and 98% Made for Kids, 18% new entrants, 16% micro-channels, median
+channel age 41 months. Enormous payouts flowing almost entirely to established studios, under the
+worst monetization regime. Do not enter.
+
+**The recommended niche's core premise holds.** 76% of sampled parent-facing art/activity Shorts
+are **general-audience, not MFK** — this audience demonstrably *is* reachable without the COPPA
+label, which was the load-bearing claim in §4. Median duration 24s, matching the 20–40s spec.
+
+### What the data corrects
+
+**⚠️ The two highest "openness" scores are measuring churn, not opportunity.** Character-led
+episodic (86) and generic AI story cartoons (83) share a profile: median channel age **8 months**,
+52–69% of videos from channels under 10k subs, and views-per-subscriber of **89–102×**. Very new
+channels, tiny subscriber bases, enormous view multiples, 34–36s runtime. That is precisely the
+content-farm fingerprint §2.2 describes. The most likely reading is not "this niche is wide open"
+but **"the incumbents here keep getting terminated."** The openness heuristic cannot tell those two
+apart, and on this evidence it is actively misleading for these two rows. Treat 86 and 83 as a
+warning, not an invitation — and note the two niches share 8 sampled videos (10%), so they are
+not independent observations anyway.
+
+**⚠️ The sensory/non-verbal backup is much weaker than §3 assumed.** Median views **10.3K**, p90
+just 101.9K — an order of magnitude below every other niche measured, with 68% micro-channels.
+§3 scored it 17/35 and called it "the best *pure* MFK Shorts play." The data does not support
+that. It is cheap and uncrowded because reach is poor, which is a different thing from an
+opening. **Demote it from backup to experiment**, or drop it.
+
+**The parent-facing pick involves a real tradeoff, not a free lunch.** Within that sample, the
+Made-for-Kids videos earn *higher* median views than the general-audience ones (653K vs 328K).
+So the choice is genuinely reach-vs-monetization: labelling MFK buys roughly 2× the views at
+~1/5 the RPM and no comments or memberships. §4 presented the general-audience route as
+strictly better; it is not. It is better *per view*, and it trades away some reach to get there.
+The recommendation stands — 2× reach does not recover a 5× RPM gap, and the community and funnel
+features matter — but it should be made with that tradeoff visible.
+
+### Caveats on these numbers
+
+- `order=viewCount` samples the **head** of each niche, so "median views" is the median of the
+  winners, not of the niche. It measures the ceiling. Re-run with `--order relevance` for the
+  typical case.
+- n≈58–100 per niche off 2 queries each. Directionally sound, not precise.
+- US region, English relevance. Several niches (nursery rhymes, AI cartoons) surfaced heavily
+  Hindi-language results regardless, which suggests the regional picture differs materially.
+
+---
+
 ## 4. Recommendation
 
 ### Primary: Parent-facing kids art & activity Shorts (general audience)
@@ -173,7 +246,7 @@ an AdSense cheque. Downloadable kids art printables are a near-zero-marginal-cos
 for a store already set up to sell art. If that connection is *not* the intent here, the niche
 still stands on its own on the numbers above — but it would be worth deciding deliberately.
 
-### Backup / parallel: Sensory non-verbal toddler Shorts (Made for Kids)
+### Backup / parallel: Sensory non-verbal toddler Shorts (Made for Kids) — *downgraded, see §3.5*
 
 Run only if you want a second, cheap, language-independent channel. No voice track means no
 translation cost and global reach. Accept it as a subscriber/reach asset at $0.05–0.15 RPM, keep

@@ -206,7 +206,14 @@ class Client {
 // ---------------------------------------------------------------- collection
 
 async function searchShortIds(client, query, opts) {
-  const publishedAfter = new Date(Date.now() - opts.days * 86400_000).toISOString();
+  // Quantized to the start of the UTC day. If this carried a live millisecond
+  // timestamp the cache key would change on every run, so search.list — the 100-unit
+  // call that dominates the whole budget — would never hit cache, and two runs an
+  // hour apart would silently sample different videos.
+  const since = new Date(Date.now() - opts.days * 86400_000);
+  const publishedAfter = new Date(Date.UTC(
+    since.getUTCFullYear(), since.getUTCMonth(), since.getUTCDate()
+  )).toISOString();
   const ids = [];
   let pageToken;
 
@@ -352,12 +359,30 @@ function analyse(label, videos, channels) {
     openness,
     topVideos: [...videos].sort((a, b) => b.views - a.views).slice(0, 10),
     topChannels: [...byChannel.values()].sort((a, b) => b.views - a.views).slice(0, 10),
+    // Every sampled video, so a surprising median can be traced back to its inputs
+    // instead of being taken on trust.
+    sample: videos.map((v) => {
+      const ch = channels.get(v.channelId);
+      return {
+        id: v.id,
+        title: v.title,
+        channelId: v.channelId,
+        channelTitle: v.channelTitle,
+        publishedAt: v.publishedAt,
+        seconds: v.seconds,
+        views: v.views,
+        madeForKids: v.madeForKids,
+        subs: ch?.subs ?? null,
+        channelAgeMonths: ch?.ageMonths ?? null,
+        viewsPerSub: ch && Number.isFinite(ch.subs) && ch.subs > 0 ? v.views / ch.subs : null,
+      };
+    }),
   };
 }
 
 // ---------------------------------------------------------------- reporting
 
-function renderMarkdown(results, meta) {
+function renderMarkdown(results, meta, overlaps = []) {
   const L = [];
   L.push('# YouTube Shorts niche scan — measured data');
   L.push('');
@@ -391,6 +416,15 @@ function renderMarkdown(results, meta) {
   L.push('> "median views" here is the median *of the winners*, not of the niche. It measures');
   L.push('> the ceiling. Re-run with `--order relevance` to sample the typical case instead.');
   L.push('');
+  if (overlaps.length) {
+    L.push('> **Sample overlap** — these niches drew some of the same videos, so their rows are');
+    L.push('> not independent observations. Tighten the queries in the config to separate them:');
+    L.push('>');
+    for (const o of overlaps.slice(0, 8)) {
+      L.push(`> - ${o.a} ∩ ${o.b}: **${o.shared} shared video${o.shared === 1 ? '' : 's'}** (${pct(o.shareOfSmaller)} of the smaller sample)`);
+    }
+    L.push('');
+  }
 
   for (const r of results) {
     L.push(`## ${r.label}`);
@@ -559,13 +593,32 @@ No API key found.
     process.exit(1);
   }
 
+  // Overlapping queries can put the same video in two niches, which makes their
+  // metrics non-independent. Surface it rather than letting it read as two data points.
+  const overlaps = [];
+  for (let i = 0; i < results.length; i++) {
+    for (let j = i + 1; j < results.length; j++) {
+      const a = new Set(results[i].sample.map((v) => v.id));
+      const shared = results[j].sample.filter((v) => a.has(v.id)).length;
+      if (shared) {
+        overlaps.push({
+          a: results[i].label,
+          b: results[j].label,
+          shared,
+          shareOfSmaller: shared / Math.min(results[i].sampled, results[j].sampled),
+        });
+      }
+    }
+  }
+  overlaps.sort((x, y) => y.shared - x.shared);
+
   const meta = { ...opts, quotaUsed: client.quotaUsed, generatedAt: new Date().toISOString() };
   const stamp = new Date().toISOString().slice(0, 10);
   const mdPath = join(outDir, `niche-scan-${stamp}.md`);
   const jsonPath = join(outDir, `niche-scan-${stamp}.json`);
 
-  writeFileSync(mdPath, renderMarkdown(results, meta));
-  writeFileSync(jsonPath, JSON.stringify({ meta, results }, null, 2));
+  writeFileSync(mdPath, renderMarkdown(results, meta, overlaps));
+  writeFileSync(jsonPath, JSON.stringify({ meta, overlaps, results }, null, 2));
 
   printTable(results);
   console.log(`Quota used: ${client.quotaUsed} units (${client.cacheHits} cached responses reused)`);
