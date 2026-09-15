@@ -33,7 +33,7 @@ const CALLBACK_PATH = '/oauth2callback';
 const REDIRECT_URI = `http://localhost:${PORT}${CALLBACK_PATH}`;
 
 // Credentials: either the JSON Google hands you, or the two env vars.
-let clientId, clientSecret, clientKind = 'unknown';
+let clientId, clientSecret, clientKind = 'from .env.local (type not recorded there)';
 const secretsPath = flag('client-secrets');
 if (secretsPath) {
   const file = JSON.parse(readFileSync(resolve(secretsPath), 'utf8'));
@@ -60,21 +60,27 @@ No OAuth client configured.
   process.exit(1);
 }
 
+const isDesktop = /installed/.test(clientKind);
+
 console.log(`
 YouTube upload authorisation
 ────────────────────────────
 client type : ${clientKind}
 redirect    : ${REDIRECT_URI}
+`);
 
-This exact redirect URI must be registered on the OAuth client:
+if (!isDesktop) {
+  // Only web clients need this, and a client loaded from env vars can't be identified,
+  // so say it conditionally rather than telling desktop users to do pointless setup.
+  console.log(`If this is a "Web application" client, register the redirect URI first:
   console.cloud.google.com → APIs & Services → Credentials → (your client)
   → Authorized redirect URIs → Add → ${REDIRECT_URI} → Save
 
-  A "Desktop app" client accepts any loopback port without registering it.
-  A "Web application" client does not — the URI above must be added exactly.
-  (Localhost URIs are exempt from Google's HTTPS-only rule, so plain http is fine.)
+A "Desktop app" client needs no registration — any loopback port is accepted.
+`);
+}
 
-Also make sure your Google account is a Test user under
+console.log(`Your Google account must be a Test user under
   APIs & Services → OAuth consent screen, unless the app is published.
 `);
 

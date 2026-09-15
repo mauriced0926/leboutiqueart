@@ -58,25 +58,23 @@ node pipeline/auth.mjs --client-secrets ~/Downloads/client_secret_....json
 This starts a throwaway local server, opens a consent URL, and catches Google's redirect.
 It writes `YOUTUBE_OAUTH_REFRESH_TOKEN` into `.env.local` on success.
 
-**Before the first run, register the redirect URI.** Google Cloud console → APIs & Services
-→ Credentials → your OAuth client → Authorized redirect URIs → add exactly:
+**The configured client is a Desktop app, so no redirect registration is needed.** Google
+accepts any loopback address, port and path for `installed` clients. Verified directly
+against the authorization endpoint:
 
-```
-http://localhost:8765/oauth2callback
-```
-
-Two client types behave differently here:
-
-| Client type | Redirect registration |
+| Redirect URI | Result |
 |---|---|
-| **Desktop app** | Any loopback port works with no registration — simplest |
-| **Web application** | The exact URI above must be registered, port included |
+| `http://localhost:8765/oauth2callback` | accepted |
+| `http://127.0.0.1:8765/oauth2callback` | accepted |
+| `http://localhost:9999/anything` | accepted |
+| `https://evil.example.com/x` (control) | rejected — `redirect_uri_mismatch` |
 
-The current credentials in `.env.local` are a **Web application** client, so the URI must be
-registered. Creating a Desktop-app client instead avoids that step entirely.
+If you ever swap in a **Web application** client instead, that one *does* require the exact
+URI — port and path included — registered under Credentials → Authorized redirect URIs.
+`auth.mjs` prints those instructions only when the client isn't a desktop one.
 
-Also add your Google account under APIs & Services → OAuth consent screen → Test users,
-unless the app is published — otherwise consent returns `access_denied`.
+Your Google account must be listed under APIs & Services → OAuth consent screen → Test
+users, unless the app is published — otherwise consent returns `access_denied`.
 
 > The paste-a-code out-of-band flow you'll find in older tutorials
 > (`redirect_uri=urn:ietf:wg:oauth:2.0:oob`) was blocked for every client type in January
@@ -146,9 +144,10 @@ Guides still quoting 1,600 units per upload are out of date.
 **Unverified Google Cloud projects can only upload private/unlisted.** Verify the project
 before expecting `--public` to work.
 
-**A `web` client's secret is genuinely confidential.** Unlike a desktop client (where the
-secret is not treated as a real secret), a web client secret grants token exchange. Keep it
-in `.env.local`, and rotate it in the console if it is ever pasted somewhere shared.
+**Keep the client secret in `.env.local`.** For a desktop client Google does not treat the
+secret as truly confidential (it ships inside distributed apps), but it is still half of a
+credential pair — don't commit it, and rotate it in the console if it leaks somewhere
+shared. For a *web* client the secret genuinely is confidential.
 
 **Daily cadence is a floor, not a target.** If the novelty gate starts rejecting four
 attempts in a row, that is the series telling you an axis is exhausted. Widen the cast or the
