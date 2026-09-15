@@ -83,15 +83,48 @@ users, unless the app is published — otherwise consent returns `access_denied`
 ## Daily loop
 
 ```bash
-node pipeline/run.mjs              # generate one episode → review queue
-node pipeline/review.mjs           # list the queue
-node pipeline/review.mjs show 12   # read it in full
+node pipeline/doctor.mjs           # what's configured, what's missing
+node pipeline/run.mjs              # 1. script      → episode.json
+node pipeline/build.mjs            # 2. media       → video.mp4
+node pipeline/review.mjs           # 3. list the queue
+node pipeline/review.mjs show 12   #    read it in full
 node pipeline/review.mjs approve 12
-node pipeline/publish.mjs          # upload approved episodes (private by default)
-node pipeline/publish.mjs --public # when you are ready
+node pipeline/publish.mjs          # 4. upload approved (private by default)
+node pipeline/publish.mjs --public #    when you are ready
 ```
 
-`--dry-run` works on `run.mjs` and `publish.mjs`.
+`--dry-run` works on `run.mjs` and `publish.mjs`. `doctor.mjs --live` actually calls the
+image and speech APIs to prove they work, for a few cents.
+
+### What build.mjs does
+
+1. **Character sheet, once.** Generates `assets/character-sheet.png` from the bible's cast.
+   Every subsequent beat image is conditioned on it as a reference image. This is how Mango
+   stays looking like Mango — text prompts alone drift, and drift between episodes is the
+   most visible sign of machine production.
+2. **One image per beat**, with the style block sent verbatim on every call.
+3. **Narration per beat, fitted to the beat's exact duration.** Beat lengths are fixed by
+   the formula, so audio is padded or trimmed to fit rather than left to run long —
+   otherwise audio and video drift apart across five beats and the episode ends mid-word.
+4. **Assembly** via ffmpeg, with a slow push-in on each still.
+
+Beat images are cached, so a re-run after a failure doesn't regenerate what already worked.
+
+### Providers
+
+| Stage | Default | Swap via |
+|---|---|---|
+| Script | Claude `claude-opus-5` | — |
+| Images | Gemini image model | `MEDIA_IMAGE_PROVIDER`, `MEDIA_IMAGE_MODEL` |
+| Narration | Google Cloud TTS | `MEDIA_TTS_PROVIDER`, `MEDIA_TTS_VOICE` |
+
+Google is the default because this project already has a Google Cloud project for the
+YouTube API — one console, one billing account. Both media functions dispatch on an env
+var, so another provider is a new branch in `lib/media.mjs`, not a rewrite.
+
+**Rough cost per episode: $0.25–0.35** — dominated by ~5 image generations, with narration
+and the script a few cents. Call it $8–11/month at one a day. Verify against current
+pricing before scaling; these are order-of-magnitude figures, not quotes.
 
 ## Tests
 
