@@ -21,7 +21,7 @@ const check = (name, ok, detail) => { rows.push({ name, ok, detail }); };
 const set = (k) => Boolean(env[k]) && !/^your_|^run_pipeline/.test(env[k]);
 
 const imageProvider = env.MEDIA_IMAGE_PROVIDER ?? 'gemini';
-const ttsProvider = env.MEDIA_TTS_PROVIDER ?? 'google';
+const ttsProvider = env.MEDIA_TTS_PROVIDER ?? 'gemini';
 
 check('ANTHROPIC_API_KEY', set('ANTHROPIC_API_KEY'), 'script generation — console.anthropic.com');
 
@@ -35,8 +35,10 @@ if (imageProvider === 'gemini') {
   check(`image provider "${imageProvider}"`, false, 'unsupported — use gemini or openai');
 }
 
-if (ttsProvider === 'google') {
-  check('GOOGLE_TTS_API_KEY', set('GOOGLE_TTS_API_KEY') || set('GEMINI_API_KEY'), 'narration via google — enable Cloud Text-to-Speech, or reuse GEMINI_API_KEY');
+if (ttsProvider === 'gemini') {
+  check('GEMINI_API_KEY (narration)', set('GEMINI_API_KEY'), 'narration via gemini — same key as images');
+} else if (ttsProvider === 'google') {
+  check('GOOGLE_TTS_ACCESS_TOKEN', set('GOOGLE_TTS_ACCESS_TOKEN'), 'cloud TTS needs OAuth2, not an API key — prefer MEDIA_TTS_PROVIDER=gemini');
 } else if (ttsProvider === 'elevenlabs') {
   check('ELEVENLABS_API_KEY', set('ELEVENLABS_API_KEY'), 'narration via elevenlabs — elevenlabs.io profile');
   check('ELEVENLABS_VOICE_ID', set('ELEVENLABS_VOICE_ID'), 'narration via elevenlabs — voice ID, not display name');
@@ -44,7 +46,7 @@ if (ttsProvider === 'google') {
   check('OPENAI_API_KEY', set('OPENAI_API_KEY'), 'narration via openai — platform.openai.com/api-keys');
   check('OPENAI_TTS_MODEL', set('OPENAI_TTS_MODEL'), 'narration via openai — model name is not guessed');
 } else {
-  check(`tts provider "${ttsProvider}"`, false, 'unsupported — use google, elevenlabs or openai');
+  check(`tts provider "${ttsProvider}"`, false, 'unsupported — use gemini, google, elevenlabs or openai');
 }
 check('YOUTUBE_API_KEY', set('YOUTUBE_API_KEY'), 'read-only stats and niche scanning');
 check('YOUTUBE_OAUTH_CLIENT_ID', set('YOUTUBE_OAUTH_CLIENT_ID'), 'uploads');
@@ -65,12 +67,13 @@ if (set('YOUTUBE_OAUTH_REFRESH_TOKEN')) {
 if (live) {
   const tmp = mkdtempSync(join(tmpdir(), 'doctor-'));
   try {
-    await generateImage({ prompt: 'A single small red apple on a plain background.', stylePrompt: 'Flat gouache illustration.', outputPath: join(tmp, 'a.png'), env });
-    check('image generation (live)', true, `${statSync(join(tmp, 'a.png')).size} bytes returned`);
+    // Use the returned path — adapters may change the extension to match the real format.
+    const p = await generateImage({ prompt: 'A single small red apple on a plain background.', stylePrompt: 'Flat gouache illustration.', outputPath: join(tmp, 'a.png'), env });
+    check('image generation (live)', true, `${statSync(p).size} bytes returned`);
   } catch (e) { check('image generation (live)', false, e.message.split('\n')[0]); }
   try {
-    await generateVoiceover({ text: 'Testing one two three.', outputPath: join(tmp, 'a.mp3'), env });
-    check('speech synthesis (live)', true, `${statSync(join(tmp, 'a.mp3')).size} bytes returned`);
+    const p = await generateVoiceover({ text: 'Testing one two three.', outputPath: join(tmp, 'a.mp3'), env });
+    check('speech synthesis (live)', true, `${statSync(p).size} bytes, ${p.split('.').pop()}`);
   } catch (e) { check('speech synthesis (live)', false, e.message.split('\n')[0]); }
 }
 

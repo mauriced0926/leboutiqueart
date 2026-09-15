@@ -183,26 +183,33 @@ export async function generateImage({ prompt, stylePrompt, referenceImages = [],
 
 /** Synthesize one line of narration to a file. */
 export async function generateVoiceover({ text, voiceName, languageCode = 'en-GB', outputPath, env = process.env }) {
-  const provider = env.MEDIA_TTS_PROVIDER ?? 'google';
+  const provider = env.MEDIA_TTS_PROVIDER ?? 'gemini';
+  if (provider === 'gemini') return geminiVoice({ text, voiceName, outputPath, env });
   if (provider === 'elevenlabs') return elevenlabsVoice({ text, voiceName, outputPath, env });
   if (provider === 'openai') return openaiVoice({ text, voiceName, outputPath, env });
   if (provider !== 'google') {
-    throw new Error(`Unknown MEDIA_TTS_PROVIDER "${provider}". Supported: google, elevenlabs, openai.`);
+    throw new Error(`Unknown MEDIA_TTS_PROVIDER "${provider}". Supported: gemini, google, elevenlabs, openai.`);
   }
-  const key = env.GOOGLE_TTS_API_KEY ?? env.GEMINI_API_KEY;
-  if (!key) {
+  // Cloud TTS rejects API keys outright — it needs an OAuth2 access token or a service
+  // account. Verified: it answers `API keys are not supported by this API` (401). So this
+  // branch requires GOOGLE_TTS_ACCESS_TOKEN, and `gemini` is the default instead.
+  const token = env.GOOGLE_TTS_ACCESS_TOKEN;
+  if (!token) {
     throw new Error(
-      'GOOGLE_TTS_API_KEY is not set in .env.local.\n' +
-      '  Enable "Cloud Text-to-Speech API" in your Google Cloud project, then create an\n' +
-      '  API key for it. Confirm the voice licence permits monetized child-directed use.'
+      'Cloud Text-to-Speech does not accept API keys — it needs OAuth2.\n' +
+      '  Easiest fix: use MEDIA_TTS_PROVIDER=gemini (the default), which works with\n' +
+      '  GEMINI_API_KEY and needs no extra setup.\n' +
+      '  To use Cloud TTS anyway, set GOOGLE_TTS_ACCESS_TOKEN from a service account\n' +
+      '  (gcloud auth application-default print-access-token).'
     );
   }
+  const key = null;
   const body = {
     input: { text },
     voice: { languageCode, name: voiceName ?? `${languageCode}-Standard-A` },
     audioConfig: { audioEncoding: 'MP3', speakingRate: 0.95, pitch: 1.0 },
   };
-  const json = await postJson(`${TTS_URL}?key=${key}`, body, key, 'Speech synthesis');
+  const json = await postJson(TTS_URL, body, token, 'Speech synthesis', { authorization: `Bearer ${token}` });
   if (!json.audioContent) throw new Error('Speech synthesis returned no audio.');
   mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, Buffer.from(json.audioContent, 'base64'));
@@ -217,6 +224,68 @@ export async function generateVoiceover({ text, voiceName, languageCode = 'en-GB
  * Endpoint paths are stable; MODEL NAMES CHURN, so every one is an env var with no
  * hardcoded guess baked into the logic.
  */
+
+/**
+ * Gemini native TTS. The default, because it works with the same GEMINI_API_KEY the image
+ * stage uses — no service account, no second credential.
+ *
+ * It returns raw signed 16-bit PCM (audio/L16), not a container format, so nothing can play
+ * or probe it as-is. We prepend a WAV header rather than shelling out to ffmpeg for the
+ * conversion: it is 44 deterministic bytes and keeps this function usable on its own.
+ */
+async function geminiVoice({ text, voiceName, outputPath, env }) {
+  const key = env.GEMINI_API_KEY;
+  if (!key) {
+    throw new Error(
+      'GEMINI_API_KEY is not set in .env.local.\n' +
+      '  Get one at aistudio.google.com/apikey — the same key covers images and narration.'
+    );
+  }
+  const model = env.MEDIA_TTS_MODEL ?? 'gemini-2.5-flash-preview-tts';
+  const voice = voiceName ?? env.MEDIA_TTS_VOICE ?? 'Kore';
+
+  const json = await postJson(
+    `${GEMINI_BASE}/models/${model}:generateContent?key=${key}`,
+    {
+      contents: [{ role: 'user', parts: [{ text }] }],
+      generationConfig: {
+        responseModalities: ['AUDIO'],
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } },
+      },
+    },
+    key, 'Gemini speech synthesis',
+  );
+
+  const part = json.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data);
+  if (!part) throw new Error('Gemini speech synthesis returned no audio.');
+
+  const rate = Number(/rate=(\d+)/.exec(part.inlineData.mimeType ?? '')?.[1] ?? 24000);
+  const pcm = Buffer.from(part.inlineData.data, 'base64');
+  // Written as .wav regardless of the caller's extension — the bytes are PCM, and
+  // mislabelling them .mp3 would make ffmpeg fail confusingly downstream.
+  const wavPath = outputPath.replace(/\.[^.]+$/, '') + '.wav';
+  return writeOut(wavPath, pcmToWav(pcm, rate));
+}
+
+/** Minimal 44-byte RIFF/WAVE header for mono signed 16-bit PCM. */
+export function pcmToWav(pcm, sampleRate = 24000, channels = 1, bitsPerSample = 16) {
+  const blockAlign = (channels * bitsPerSample) / 8;
+  const header = Buffer.alloc(44);
+  header.write('RIFF', 0);
+  header.writeUInt32LE(36 + pcm.length, 4);
+  header.write('WAVE', 8);
+  header.write('fmt ', 12);
+  header.writeUInt32LE(16, 16);            // PCM chunk size
+  header.writeUInt16LE(1, 20);             // format = PCM
+  header.writeUInt16LE(channels, 22);
+  header.writeUInt32LE(sampleRate, 24);
+  header.writeUInt32LE(sampleRate * blockAlign, 28); // byte rate
+  header.writeUInt16LE(blockAlign, 32);
+  header.writeUInt16LE(bitsPerSample, 34);
+  header.write('data', 36);
+  header.writeUInt32LE(pcm.length, 40);
+  return Buffer.concat([header, pcm]);
+}
 
 /** ElevenLabs. Returns MP3 bytes directly — not base64 in a JSON envelope. */
 async function elevenlabsVoice({ text, voiceName, outputPath, env }) {

@@ -116,7 +116,7 @@ Beat images are cached, so a re-run after a failure doesn't regenerate what alre
 |---|---|---|---|
 | Script | Claude `claude-opus-5` | — | — |
 | Images | Gemini | OpenAI | `MEDIA_IMAGE_PROVIDER=gemini\|openai` |
-| Narration | Google Cloud TTS | ElevenLabs, OpenAI | `MEDIA_TTS_PROVIDER=google\|elevenlabs\|openai` |
+| Narration | Gemini native TTS | ElevenLabs, OpenAI, Cloud TTS | `MEDIA_TTS_PROVIDER=gemini\|elevenlabs\|openai\|google` |
 
 ```bash
 # ElevenLabs narration
@@ -130,8 +130,18 @@ OPENAI_API_KEY=...
 OPENAI_IMAGE_MODEL=...         # model names churn; nothing is guessed for you
 ```
 
-Google is the default because this project already has a Google Cloud project for the
-YouTube API — one console, one billing account.
+Gemini is the default for both stages because **one `GEMINI_API_KEY` covers images and
+narration** — no second credential, no service account.
+
+> **Cloud Text-to-Speech does not accept API keys.** It returns
+> `401 API keys are not supported by this API` and needs an OAuth2 token or service
+> account. That is why narration defaults to Gemini's native TTS instead. If you do want
+> Cloud TTS, set `GOOGLE_TTS_ACCESS_TOKEN` (`gcloud auth application-default
+> print-access-token`).
+>
+> Gemini TTS returns raw `audio/L16` PCM, not a container format, so the adapter prepends a
+> WAV header and writes `.wav` regardless of the extension you pass. Use the returned path,
+> not the one you passed in.
 
 **One real caveat if you pick OpenAI for images:** its generations endpoint takes no
 reference image, so it cannot be conditioned on the character sheet the way the Gemini
@@ -150,11 +160,17 @@ Free tiers cover the media almost entirely at this volume:
 
 | Stage | Free allowance | This channel uses |
 |---|---|---|
-| Images (Gemini Flash image) | ~500 images/day, no card required | ~5/episode |
+| Images (Gemini Flash image) | **requires billing enabled** — see below | ~5/episode |
 | Narration (Cloud TTS, Standard voices) | 4M characters/month | ~200 chars/episode |
 | Script (Claude Opus 5) | none — paid per token | ~$0.05–0.08/episode |
 
-So the script is the only line that reliably costs money. Two things push you off free:
+**Image generation needs billing on the Gemini project.** Verified against a live key:
+every image model — `gemini-2.5-flash-image`, `gemini-3.1-flash-image`,
+`gemini-3.1-flash-lite-image`, `gemini-3-pro-image` — returns `429 You exceeded your
+current quota` on a billing-free key, while TTS on that same key succeeds. Enable billing
+at [ai.dev](https://ai.dev/rate-limit); actual spend at ~5 images/day stays small.
+
+Two things push you further off free:
 picking a Pro-tier image model (Gemini 3 Pro Image has **no** free tier at all) or a premium
 voice class (Studio voices are $160/1M chars vs $4 for Standard). Both are opt-in via
 `MEDIA_IMAGE_MODEL` and `MEDIA_TTS_VOICE` — the defaults stay in the free lane.

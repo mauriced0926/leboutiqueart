@@ -13,7 +13,7 @@ const test = async (n, f) => { try { await f(); passed++; console.log(`  ✓ ${n
 const tmp = mkdtempSync(join(tmpdir(), 'prov-'));
 const realFetch = global.fetch;
 let seen = null;
-const mock = (status, body) => { global.fetch = async (url, opts) => { seen = { url: String(url), body: JSON.parse(opts.body), opts }; return { ok: status < 400, status, text: async () => JSON.stringify(body) }; }; };
+const mock = (status, body) => { global.fetch = async (url, opts) => { seen = { url: String(url), body: JSON.parse(opts.body), headers: opts.headers, opts }; return { ok: status < 400, status, text: async () => JSON.stringify(body) }; }; };
 const PNG = Buffer.from('89504e470d0a1a0a', 'hex');
 const okImage = { candidates: [{ finishReason: 'STOP', content: { parts: [{ inlineData: { mimeType: 'image/png', data: PNG.toString('base64') } }] } }] };
 
@@ -67,33 +67,53 @@ await test('unknown provider names the seam to implement', async () => {
   await assert.rejects(() => generateImage({ prompt: 'p', stylePrompt: 's', outputPath: join(tmp, 'f.png'), env: { MEDIA_IMAGE_PROVIDER: 'dalle' } }), /Unknown MEDIA_IMAGE_PROVIDER "dalle"/);
 });
 
-console.log('\ngenerateVoiceover');
-const okAudio = { audioContent: Buffer.from('ID3').toString('base64') };
-await test('posts the documented synthesize body', async () => {
-  mock(200, okAudio);
-  await generateVoiceover({ text: 'hello there', outputPath: join(tmp, 'v.mp3'), env: { GOOGLE_TTS_API_KEY: 'k2' } });
-  assert.ok(seen.url.startsWith('https://texttospeech.googleapis.com/v1/text:synthesize'));
-  assert.equal(seen.body.input.text, 'hello there');
-  assert.equal(seen.body.audioConfig.audioEncoding, 'MP3');
-  assert.equal(seen.body.voice.languageCode, 'en-GB');
+console.log('\ngenerateVoiceover — gemini (default)');
+const PCM = Buffer.alloc(64, 7);
+const okGemini = { candidates: [{ content: { parts: [{ inlineData: { mimeType: 'audio/L16;codec=pcm;rate=24000', data: PCM.toString('base64') } }] } }] };
+
+await test('defaults to gemini native TTS on the shared key', async () => {
+  mock(200, okGemini);
+  await generateVoiceover({ text: 'hello there', outputPath: join(tmp, 'v.mp3'), env: { GEMINI_API_KEY: 'k2' } });
+  assert.ok(seen.url.includes('/models/gemini-2.5-flash-preview-tts:generateContent'), seen.url);
+  assert.deepEqual(seen.body.generationConfig.responseModalities, ['AUDIO']);
+  assert.equal(seen.body.contents[0].parts[0].text, 'hello there');
 });
-await test('falls back to GEMINI_API_KEY when no TTS key is set', async () => {
-  mock(200, okAudio);
-  await generateVoiceover({ text: 't', outputPath: join(tmp, 'v2.mp3'), env: { GEMINI_API_KEY: 'shared' } });
-  assert.ok(seen.url.includes('key=shared'));
+await test('wraps raw PCM in a WAV container and renames the file', async () => {
+  // Gemini returns audio/L16 — unplayable and unprobeable without a header, so a .mp3
+  // extension here would make ffmpeg fail confusingly downstream.
+  mock(200, okGemini);
+  const out = await generateVoiceover({ text: 't', outputPath: join(tmp, 'v2.mp3'), env: { GEMINI_API_KEY: 'k' } });
+  assert.ok(out.endsWith('.wav'), `expected .wav, got ${out}`);
+  const buf = readFileSync(out);
+  assert.equal(buf.slice(0, 4).toString(), 'RIFF');
+  assert.equal(buf.readUInt32LE(24), 24000, 'sample rate should come from the mime type');
+  assert.equal(buf.length, 44 + PCM.length);
 });
-await test('writes decoded audio', async () => {
-  mock(200, okAudio);
-  const out = join(tmp, 'v3.mp3');
-  await generateVoiceover({ text: 't', outputPath: out, env: { GOOGLE_TTS_API_KEY: 'k' } });
-  assert.equal(readFileSync(out).toString(), 'ID3');
+await test('honours a non-default sample rate from the mime type', async () => {
+  mock(200, { candidates: [{ content: { parts: [{ inlineData: { mimeType: 'audio/L16;codec=pcm;rate=16000', data: PCM.toString('base64') } }] } }] });
+  const out = await generateVoiceover({ text: 't', outputPath: join(tmp, 'v6.mp3'), env: { GEMINI_API_KEY: 'k' } });
+  assert.equal(readFileSync(out).readUInt32LE(24), 16000);
 });
-await test('missing key mentions the licence question', async () => {
-  await assert.rejects(() => generateVoiceover({ text: 't', outputPath: join(tmp, 'v4.mp3'), env: {} }), /monetized child-directed use/);
+await test('missing key points at the shared gemini key', async () => {
+  await assert.rejects(() => generateVoiceover({ text: 't', outputPath: join(tmp, 'v4.mp3'), env: {} }), /same key covers images and narration/);
 });
 await test('empty audio response is an error, not a zero-byte file', async () => {
-  mock(200, {});
-  await assert.rejects(() => generateVoiceover({ text: 't', outputPath: join(tmp, 'v5.mp3'), env: { GOOGLE_TTS_API_KEY: 'k' } }), /returned no audio/);
+  mock(200, { candidates: [{ content: { parts: [] } }] });
+  await assert.rejects(() => generateVoiceover({ text: 't', outputPath: join(tmp, 'v5.mp3'), env: { GEMINI_API_KEY: 'k' } }), /returned no audio/);
+});
+
+console.log('\ngenerateVoiceover — cloud TTS');
+await test('explains that Cloud TTS rejects API keys', async () => {
+  // Verified live: Cloud TTS answers 401 "API keys are not supported by this API".
+  await assert.rejects(() => generateVoiceover({ text: 't', outputPath: join(tmp, 'g.mp3'), env: { MEDIA_TTS_PROVIDER: 'google', GOOGLE_TTS_API_KEY: 'k' } }),
+    /does not accept API keys.*MEDIA_TTS_PROVIDER=gemini/s);
+});
+await test('uses a bearer token when one is supplied', async () => {
+  mock(200, { audioContent: Buffer.from('ID3').toString('base64') });
+  await generateVoiceover({ text: 'hi', outputPath: join(tmp, 'g2.mp3'), env: { MEDIA_TTS_PROVIDER: 'google', GOOGLE_TTS_ACCESS_TOKEN: 'ya29.tok' } });
+  assert.ok(seen.url.startsWith('https://texttospeech.googleapis.com/v1/text:synthesize'));
+  assert.equal(seen.headers.authorization, 'Bearer ya29.tok');
+  assert.equal(seen.body.audioConfig.audioEncoding, 'MP3');
 });
 
 const mockBin = (status, bytes, errBody) => {
@@ -168,7 +188,7 @@ await test('a URL-only image response explains the fix', async () => {
 console.log('\ndispatch');
 await test('unknown tts provider lists the supported ones', async () => {
   await assert.rejects(() => generateVoiceover({ text: 't', outputPath: join(tmp, 'u.mp3'), env: { MEDIA_TTS_PROVIDER: 'nope' } }),
-    /Supported: google, elevenlabs, openai/);
+    /Supported: gemini, google, elevenlabs, openai/);
 });
 await test('unknown image provider lists the supported ones', async () => {
   await assert.rejects(() => generateImage({ prompt: 'p', stylePrompt: 's', outputPath: join(tmp, 'u.png'), env: { MEDIA_IMAGE_PROVIDER: 'nope' } }),
