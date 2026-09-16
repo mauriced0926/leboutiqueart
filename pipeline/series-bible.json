@@ -1,0 +1,221 @@
+{
+  "channel": {
+    "name": "Fix-It Forest",
+    "handle_preferred": "@fixitforest",
+    "handle_fallbacks": [
+      "@fixitforesttv",
+      "@thefixitforest",
+      "@fixitforestkids"
+    ],
+    "tagline": "Little repairs, one at a time.",
+    "description": "In a hollow stump at the edge of the birch wood, Mango the fox runs a very small repair shop.\n\nEvery episode, a friend brings her one broken thing — a wobbly stool, a kite that will not fly, a music box that plays too slowly. Mango works out what went wrong, fixes it, and names the idea that made it work, in words a small child can repeat.\n\nGentle, unhurried stories about noticing, mending, and putting things right. Made for preschoolers and the grown-ups watching with them.\n\nNew repair every day.",
+    "keywords": [
+      "preschool",
+      "toddler stories",
+      "kids animation",
+      "bedtime stories",
+      "learning for toddlers",
+      "gentle kids shows",
+      "problem solving for kids"
+    ],
+    "naming_notes": "Channel is named for the format and setting, not the character, so the cast can widen without a rename. 'Mango' was deliberately kept out of the channel name — the Mango Kids namespace already has several established channels and competing there for search would repeat the nursery-rhyme mistake."
+  },
+  "series": {
+    "title": "Fix-It Forest",
+    "logline": "A friend arrives at the fix-it den with something broken and the story of how it happened. Mango works out why, explains it, and they mend it together.",
+    "why_this_survives_policy": "One authored property with a fixed cast, a fixed visual style and a fixed 5-beat structure. Every episode is a genuinely different repair with a different physical principle, produced against a dedupe gate. That is the opposite of near-duplicate mass production — the standard YouTube's inauthentic-content policy actually enforces.",
+    "target_runtime_seconds": 240,
+    "runtime_rationale": "Long-form (3-5 min) is where kids watch time and revenue actually live; Shorts are cut from each episode for discovery. See docs/youtube-kids-shorts-niche-research.md §2.1.",
+    "made_for_kids": true,
+    "made_for_kids_rationale": "Content is child-directed — a talking animal fixing toys for a preschool audience. COPPA requires the label; mislabelling risks ~$53k/violation. Accept the ~$1-3 RPM and treat Shorts as the discovery engine per the research doc §2.1.",
+    "format_note": "Ensemble-of-specialists structure, a long-standing genre convention. Original cast, world and designs throughout — no borrowed characters, names, uniforms, vehicles or visual language from any existing property."
+  },
+  "cast": {
+    "mango": {
+      "role": "the fixer — every episode. Listens, asks, works out why, explains, and helps mend it.",
+      "species": "red fox",
+      "age_read": "child, about 7",
+      "domain": "diagnosis and leverage",
+      "look": "rust-orange fur, cream chest, one ear permanently folded at the tip, green canvas apron with four pockets",
+      "voice_direction": "warm, unhurried, mid-register, a smile in the tone",
+      "catch_behaviour": "turns the broken thing over twice before saying anything",
+      "constant": true
+    },
+    "bramble": {
+      "role": "visitor — brings a broken thing and the story of how it broke. Rotates.",
+      "species": "hedgehog",
+      "age_read": "child, about 6",
+      "domain": "small mechanisms, friction, fit",
+      "look": "dusty brown, a single pair of round glasses worn ON HIS EYES at all times — never pushed up onto his head, never a second pair anywhere in frame — and a red neckerchief",
+      "voice_direction": "quick, slightly anxious, bright",
+      "catch_behaviour": "worries out loud so someone can reassure him",
+      "constant": false
+    },
+    "tolly": {
+      "role": "visitor — brings a broken thing and the story of how it broke. Rotates.",
+      "species": "badger",
+      "age_read": "older child, about 10",
+      "domain": "load, balance, support",
+      "look": "broad, charcoal and cream striped face, rolled shirtsleeves, a wooden mallet through the belt",
+      "voice_direction": "low, slow, gentle — never gruff",
+      "catch_behaviour": "tests everything by leaning on it",
+      "constant": false
+    },
+    "wren": {
+      "role": "visitor — brings a broken thing and the story of how it broke. Rotates.",
+      "species": "wren",
+      "age_read": "child, about 6",
+      "domain": "air, lift, balance",
+      "look": "tiny, warm brown with a cream eye-stripe, a twine tool-belt",
+      "voice_direction": "fast, chirpy, high",
+      "catch_behaviour": "always arrives last and from above",
+      "constant": false
+    },
+    "pip": {
+      "role": "visitor — brings a broken thing and the story of how it broke. Rotates.",
+      "species": "harvest mouse",
+      "age_read": "youngest, about 4",
+      "domain": "tight spaces, threading, tiny things",
+      "look": "pale gold, enormous ears, wears a thimble as a helmet",
+      "voice_direction": "very small, breathy, delighted",
+      "catch_behaviour": "narrates what she finds inside things",
+      "constant": false
+    }
+  },
+  "world": {
+    "setting": "a hollow stump workshop at the edge of a birch wood, lit by one round window",
+    "props_that_recur": [
+      "the pegboard of safe tools",
+      "the tin of odd buttons",
+      "the rolled twine spool",
+      "the three-legged stool",
+      "the notice board where jobs arrive"
+    ],
+    "time_of_day": "always warm late afternoon — keeps lighting consistent across episodes"
+  },
+  "visual_style": {
+    "medium": "2D storybook gouache, visible paper grain, soft edges",
+    "palette": [
+      "#E86A33",
+      "#F5C26B",
+      "#2F5D50",
+      "#EFE6D3",
+      "#3A3238"
+    ],
+    "line": "no hard outlines; forms defined by colour blocks and shadow",
+    "camera": "locked-off mid shots and one close-up on the hands at the fix moment",
+    "aspect": "1080x1920 vertical",
+    "text_on_screen": "one short caption per beat, bottom third, never covering hands",
+    "consistency_rule": "Every generation prompt must include the cast look block verbatim plus the palette. Character drift across episodes is the single most visible sign of machine production.",
+    "worn_items_rule": "Each character wears exactly one of each item, in the position given in the cast description. Never render a duplicate or a second copy pushed up, hung nearby or held."
+  },
+  "episode_formula": {
+    "engine": "A friend was doing something ordinary and it went wrong. They bring it to Mango and say what they were doing, what broke, and what they think they might have done. Mango asks, looks, finds the real cause, explains the idea in plain words BEFORE touching it, and then they mend it together — the friend doing part of it with Mango guiding.",
+    "why_it_scales": "Mango is the constant the audience returns for. Variety comes from the visitor, the activity they were doing, the object, the cause, and the wrong guess they arrive with — five independent axes. The visitor's wrong guess is what makes each episode a small mystery rather than a demonstration.",
+    "mango_is_never_absent": "Mango appears in every beat from arrival onward. She is the show.",
+    "beats": [
+      {
+        "n": 1,
+        "name": "cold-open",
+        "seconds": 24,
+        "content": "The friend, out in the world, doing the ordinary thing. It goes wrong on screen. Little or no dialogue — we SEE what happened.",
+        "location": "outdoors"
+      },
+      {
+        "n": 2,
+        "name": "arrival",
+        "seconds": 24,
+        "content": "Friend arrives at the den: 'Hi Mango! I was [activity] with [object], and now it won't [do the thing].' Mango welcomes them, unhurried.",
+        "location": "den"
+      },
+      {
+        "n": 3,
+        "name": "what-happened",
+        "seconds": 24,
+        "content": "Mango asks one or two plain questions. The friend offers their own guess — 'maybe because we [wrong guess]' — which is reasonable and wrong.",
+        "location": "den"
+      },
+      {
+        "n": 4,
+        "name": "look-closer",
+        "seconds": 32,
+        "content": "Mango turns it over twice and finds the real cause. Close on the fault itself, large in frame — we SEE what is wrong, not Mango's face while she describes it. She rules out the friend's guess kindly.",
+        "location": "den"
+      },
+      {
+        "n": 5,
+        "name": "the-advice",
+        "seconds": 24,
+        "content": "Mango explains the idea in plain words BEFORE touching the repair — and SHOWS it while she says it. She holds the actual parts up so the thing she describes is visible: if she says a wheel spins on a stick, we see the wheel and the stick and the gap between them. Never a character gesturing at an idea we cannot see.",
+        "location": "den"
+      },
+      {
+        "n": 6,
+        "name": "fix-together",
+        "seconds": 64,
+        "content": "They mend it together. The friend does a real part of the work with Mango guiding. This is the retention beat.",
+        "location": "den"
+      },
+      {
+        "n": 7,
+        "name": "the-test",
+        "seconds": 24,
+        "content": "The friend tries it again, in the same activity from beat 1. It works.",
+        "location": "outdoors"
+      },
+      {
+        "n": 8,
+        "name": "name-it",
+        "seconds": 24,
+        "content": "Mango names the principle in one short sentence. The friend repeats it back in their own words.",
+        "location": "den"
+      }
+    ],
+    "shot_constraint": "Every clip is 8 seconds, rendered on the Veo fast tier at 1080p — the one duration/tier/resolution combination proven to render. Beat durations must therefore be exact multiples of 8s.",
+    "location_note": "Each beat declares a location. Style anchoring happens within a location, never across one: anchoring the den on an outdoor frame pulled the garden bed inside the workshop."
+  },
+  "hard_rules": [
+    "Mango is in every episode from beat 2 onward and is always the one who works out why. Never sideline her.",
+    "The friend's wrong guess is always reasonable. They are never foolish and are never corrected unkindly.",
+    "Never a villain, never anyone who broke the object on purpose, never blame.",
+    "The fix must be physically real. A child watching must not learn something false.",
+    "Whatever Mango describes must be visible on screen while she describes it. A child who does not understand the words should still follow the fix from the pictures alone. Never a character talking about something the audience cannot see.",
+    "Never depict a repair a child could copy dangerously — no blades, heat, electricity, small swallowable magnets, or climbing.",
+    "One principle per episode, named in plain words, never jargon.",
+    "Avoid stating exact counts of things on screen unless the count IS the point. If a line does state a count, that count must be repeated in the shot visual so the picture can match it.",
+    "No brand names, no real-world product lookalikes, no resemblance to any existing kids property.",
+    "Nobody is ever the butt of a joke. Pip is the youngest, never the punchline.",
+    "No character asks the audience to like, subscribe or follow."
+  ],
+  "dedupe_axes": {
+    "comment": "Enforced by pipeline/lib/registry.mjs, not by trusting the model.",
+    "axes": {
+      "broken_object": {
+        "recency_window": 60,
+        "note": "no repeated object within 60 episodes"
+      },
+      "fix_principle": {
+        "recency_window": 25,
+        "note": "no repeated principle within 25 episodes"
+      },
+      "cause": {
+        "recency_window": 20,
+        "note": "the reason it broke must vary"
+      },
+      "visitor": {
+        "recency_window": 4,
+        "note": "rotate which friend brings the job in"
+      },
+      "activity": {
+        "recency_window": 20,
+        "note": "what they were doing when it broke must vary"
+      },
+      "wrong_guess": {
+        "recency_window": 15,
+        "note": "the friend's incorrect theory must vary"
+      }
+    },
+    "similarity_threshold": 0.62,
+    "similarity_note": "Combined trigram+token similarity against every prior premise."
+  }
+}

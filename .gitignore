@@ -36,3 +36,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# niche research output
+/research-output
+
+# pipeline runtime state (episodes, queue, generated media)
+/pipeline/state
+
+# sheet candidates are scratch; the locked character-sheet.png IS tracked
+/pipeline/assets/candidates
