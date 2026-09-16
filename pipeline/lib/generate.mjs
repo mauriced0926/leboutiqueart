@@ -17,6 +17,9 @@ const EpisodeSchema = z.object({
   premise: z.string().describe('One sentence describing what is broken and why'),
   broken_object: z.string().describe('The object being repaired, 1-3 words'),
   cause: z.string().describe('Why it broke, 1-4 words'),
+  broken_object_description: z.string().describe(
+    'The object\'s defining visible features in one line, so every shot draws the same thing — ' +
+    'e.g. "tin watering can with a long curved spout and a flat lid with a small air hole"'),
   fix_principle: z.string().describe('The physical principle used, in plain words a child could repeat'),
   visitor: z.string().describe('Which friend brings it in — a cast key, never mango'),
   activity: z.string().describe('What they were doing when it broke, a few words'),

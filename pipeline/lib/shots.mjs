@@ -106,7 +106,7 @@ export function planBeatShots(beat, max = MAX_SHOT_SECONDS) {
   count = durations.length;
 
   const shots = durations.map((seconds, index) => ({
-    beat: beat.n, index, seconds, lines: [], visual: beat.visual,
+    beat: beat.n, index, seconds, lines: [], visual: beat.visual, location: beat.location ?? null,
   }));
 
   // Fill shots in order, never splitting a line, never exceeding a shot's own length.

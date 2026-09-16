@@ -138,9 +138,10 @@ export function buildFramePrompt({ shot, bible, cast, episodeCast = null, anchor
     // The cart vanished between two shots of the same conversation. The broken object is
     // what the episode is about, so it is a required element of the frame, not set dressing.
     parts.push('',
-      `THE BROKEN OBJECT — the ${prop} must be clearly visible in this shot, in the same`,
-      'place and the same state as the reference frame. It is what the scene is about and',
-      'must never be absent, moved off-screen, or swapped for a different object.');
+      `THE BROKEN OBJECT — ${prop} — must be clearly visible in this shot, in the same state`,
+      'as the reference frame. It is what the scene is about and must never be absent, moved',
+      'off-screen, simplified, or swapped for a different object. Every listed feature of it',
+      'must be drawn: a described spout, lid or handle is part of what makes it that object.');
   }
   const counts = statedCounts(shot.lines);
   if (counts.length) {
@@ -182,6 +183,7 @@ function safetyBlock(bible) {
 /** Prompt for ANIMATING an already-composed frame. Veo must not reinvent the picture. */
 export function buildAnimationPrompt({ shot, bible, cast, prop = null }) {
   const parts = [
+    `Setting: ${shot.location ?? bible.world.setting}.`,
     'Animate this exact illustration. Keep the art style, colours, composition and every',
     'character precisely as shown. Do not restyle it, do not add or replace any character.',
     'Gentle, unhurried children\'s animation. Subtle motion. Locked-off camera.',
