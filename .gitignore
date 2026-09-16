@@ -42,3 +42,6 @@ next-env.d.ts
 
 # pipeline runtime state (episodes, queue, generated media)
 /pipeline/state
+
+# sheet candidates are scratch; the locked character-sheet.png IS tracked
+/pipeline/assets/candidates
