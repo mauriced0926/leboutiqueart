@@ -313,9 +313,14 @@ export async function renderShot({ shot, bible, outputPath, framePath, env = pro
     await generateImage({
       prompt: buildFramePrompt({ shot, bible, cast: bible.cast, episodeCast, anchorFrame, prop }),
       stylePrompt: styleBlock(bible),
-      // The sheet fixes WHO; the previous frame fixes HOW IT LOOKS. Without the anchor,
-      // consecutive frames came back in different palettes and framing and would not cut.
-      referenceImages: [bible.__sheetPath, anchorFrame].filter((f) => f && existsSync(f)),
+      // Per-character crops, never the full model sheet. Passing the five-character sheet
+      // put all five into the cold open and invented the wrong location: the picture beat
+      // the "NOT in this shot" text. Only the characters actually in the shot are shown,
+      // plus the episode's first frame to carry palette and framing across cuts.
+      referenceImages: [
+        ...charactersInShot(shot, bible.cast, episodeCast).map((k) => bible.__castRefs?.[k]),
+        anchorFrame,
+      ].filter((f) => f && existsSync(f)).slice(0, 3),
       outputPath: frame,
       env,
     });

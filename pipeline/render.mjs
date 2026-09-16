@@ -36,6 +36,14 @@ const bible = JSON.parse(readFileSync(paths.bible, 'utf8'));
 const SHEET = join(PIPELINE, 'assets', 'character-sheet.png');
 if (!existsSync(SHEET)) throw new Error(`No locked character sheet at ${SHEET}. Run: node pipeline/build.mjs --sheet --candidates 4`);
 
+// Per-character crops of the locked sheet. Cropped rather than regenerated, because
+// regenerating the sheet is what loses defined traits.
+const CAST_REFS = Object.fromEntries(Object.keys(JSON.parse(readFileSync(paths.bible, 'utf8')).cast)
+  .map((k) => [k, join(PIPELINE, 'assets', 'cast', `${k}.png`)]));
+for (const [k, f] of Object.entries(CAST_REFS)) {
+  if (!existsSync(f)) throw new Error(`Missing character reference for ${k} at ${f}.`);
+}
+
 const queueDirs = existsSync(paths.queue)
   ? readdirSync(paths.queue).map((d) => join(paths.queue, d)).filter((d) => existsSync(join(d, 'episode.json')))
   : [];
@@ -118,7 +126,7 @@ if (!stitchOnly) {
     process.stdout.write(`  ${shot.id} (${shot.seconds}s)… `);
     const started = Date.now();
     try {
-      const r = await renderShot({ shot, bible: { ...bible, __sheetPath: SHEET }, outputPath: out,
+      const r = await renderShot({ shot, bible: { ...bible, __sheetPath: SHEET, __castRefs: CAST_REFS }, outputPath: out,
         framePath: join(clipDir, `${shot.id}.png`), env, episodeCast, anchorFrame,
         prop: episode.broken_object,
         onProgress: (p) => {
