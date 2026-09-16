@@ -22,7 +22,7 @@
   },
   "series": {
     "title": "Fix-It Forest",
-    "logline": "A team of five forest fixers, each good at a different kind of problem, mends one broken thing together every episode.",
+    "logline": "A friend arrives at the fix-it den with something broken and the story of how it happened. Mango works out why, explains it, and they mend it together.",
     "why_this_survives_policy": "One authored property with a fixed cast, a fixed visual style and a fixed 5-beat structure. Every episode is a genuinely different repair with a different physical principle, produced against a dedupe gate. That is the opposite of near-duplicate mass production — the standard YouTube's inauthentic-content policy actually enforces.",
     "target_runtime_seconds": 240,
     "runtime_rationale": "Long-form (3-5 min) is where kids watch time and revenue actually live; Shorts are cut from each episode for discovery. See docs/youtube-kids-shorts-niche-research.md §2.1.",
@@ -32,49 +32,54 @@
   },
   "cast": {
     "mango": {
-      "role": "lead — works out WHY it broke",
+      "role": "the fixer — every episode. Listens, asks, works out why, explains, and helps mend it.",
       "species": "red fox",
       "age_read": "child, about 7",
       "domain": "diagnosis and leverage",
       "look": "rust-orange fur, cream chest, one ear permanently folded at the tip, green canvas apron with four pockets",
       "voice_direction": "warm, unhurried, mid-register, a smile in the tone",
-      "catch_behaviour": "turns the broken thing over twice before saying anything"
+      "catch_behaviour": "turns the broken thing over twice before saying anything",
+      "constant": true
     },
     "bramble": {
-      "role": "precision — small parts, fasteners, threading",
+      "role": "visitor — brings a broken thing and the story of how it broke. Rotates.",
       "species": "hedgehog",
       "age_read": "child, about 6",
       "domain": "small mechanisms, friction, fit",
       "look": "dusty brown, round glasses too big for his face, a red neckerchief",
       "voice_direction": "quick, slightly anxious, bright",
-      "catch_behaviour": "worries out loud so someone can reassure him"
+      "catch_behaviour": "worries out loud so someone can reassure him",
+      "constant": false
     },
     "tolly": {
-      "role": "strength — structure, weight, timber",
+      "role": "visitor — brings a broken thing and the story of how it broke. Rotates.",
       "species": "badger",
       "age_read": "older child, about 10",
       "domain": "load, balance, support",
       "look": "broad, charcoal and cream striped face, rolled shirtsleeves, a wooden mallet through the belt",
       "voice_direction": "low, slow, gentle — never gruff",
-      "catch_behaviour": "tests everything by leaning on it"
+      "catch_behaviour": "tests everything by leaning on it",
+      "constant": false
     },
     "wren": {
-      "role": "height and air — anything up high, anything that flies",
+      "role": "visitor — brings a broken thing and the story of how it broke. Rotates.",
       "species": "wren",
       "age_read": "child, about 6",
       "domain": "air, lift, balance",
       "look": "tiny, warm brown with a cream eye-stripe, a twine tool-belt",
       "voice_direction": "fast, chirpy, high",
-      "catch_behaviour": "always arrives last and from above"
+      "catch_behaviour": "always arrives last and from above",
+      "constant": false
     },
     "pip": {
-      "role": "small spaces — reaches what nobody else can",
+      "role": "visitor — brings a broken thing and the story of how it broke. Rotates.",
       "species": "harvest mouse",
       "age_read": "youngest, about 4",
       "domain": "tight spaces, threading, tiny things",
       "look": "pale gold, enormous ears, wears a thimble as a helmet",
       "voice_direction": "very small, breathy, delighted",
-      "catch_behaviour": "narrates what she finds inside things"
+      "catch_behaviour": "narrates what she finds inside things",
+      "constant": false
     }
   },
   "world": {
@@ -104,66 +109,69 @@
     "consistency_rule": "Every generation prompt must include the cast look block verbatim plus the palette. Character drift across episodes is the single most visible sign of machine production."
   },
   "episode_formula": {
-    "engine": "Someone brings a broken thing. Mango works out the real cause. The cause names a DOMAIN, and the domain names which teammate is needed. A first attempt fails for an honest reason. The right teammate solves it. The principle is named in plain words.",
-    "why_it_scales": "Five domains x objects x causes x who-brings-it is a very large space, and the failed first attempt adds a second independent axis. The team is generative, not decorative: the physics picks the character, so no episode can be a reskin of another.",
+    "engine": "A friend was doing something ordinary and it went wrong. They bring it to Mango and say what they were doing, what broke, and what they think they might have done. Mango asks, looks, finds the real cause, explains the idea in plain words BEFORE touching it, and then they mend it together — the friend doing part of it with Mango guiding.",
+    "why_it_scales": "Mango is the constant the audience returns for. Variety comes from the visitor, the activity they were doing, the object, the cause, and the wrong guess they arrive with — five independent axes. The visitor's wrong guess is what makes each episode a small mystery rather than a demonstration.",
+    "mango_is_never_absent": "Mango appears in every beat from arrival onward. She is the show.",
     "beats": [
       {
         "n": 1,
         "name": "cold-open",
         "seconds": 20,
-        "content": "The thing breaks, on screen, in use. No dialogue needed."
+        "content": "The friend, out in the world, doing the ordinary thing. It goes wrong on screen. Little or no dialogue — we SEE what happened."
       },
       {
         "n": 2,
-        "name": "the-call",
+        "name": "arrival",
         "seconds": 26,
-        "content": "It arrives at the den. Whoever is there reacts. Establish stakes: who needs it, and when."
+        "content": "Friend arrives at the den: 'Hi Mango! I was [activity] with [object], and now it won't [do the thing].' Mango welcomes them, unhurried."
       },
       {
         "n": 3,
-        "name": "diagnose",
-        "seconds": 34,
-        "content": "Mango turns it over twice and names the actual cause. Close on the fault."
+        "name": "what-happened",
+        "seconds": 26,
+        "content": "Mango asks one or two plain questions. The friend offers their own guess — 'maybe because we [wrong guess]' — which is reasonable and wrong."
       },
       {
         "n": 4,
-        "name": "first-try",
-        "seconds": 36,
-        "content": "An obvious fix is tried and honestly fails. No blame, no one is foolish."
+        "name": "look-closer",
+        "seconds": 34,
+        "content": "Mango turns it over twice and finds the real cause. Close on the fault. She rules out the friend's guess kindly."
       },
       {
         "n": 5,
-        "name": "who-is-needed",
-        "seconds": 24,
-        "content": "The cause names a domain; the domain names a teammate. They arrive in character."
+        "name": "the-advice",
+        "seconds": 26,
+        "content": "Mango explains the idea in plain words BEFORE touching it, so the child understands the fix before seeing it."
       },
       {
         "n": 6,
-        "name": "the-fix",
+        "name": "fix-together",
         "seconds": 60,
-        "content": "The real repair, as process. Two characters working together. This is the retention beat."
+        "content": "They mend it together. The friend does a real part of the work with Mango guiding. This is the retention beat."
       },
       {
         "n": 7,
         "name": "the-test",
         "seconds": 24,
-        "content": "Tested in the same use that broke it in beat 1. It works."
+        "content": "The friend tries it again, in the same activity from beat 1. It works."
       },
       {
         "n": 8,
         "name": "name-it",
-        "seconds": 16,
-        "content": "The principle stated once, plainly, in words a four-year-old can repeat."
+        "seconds": 24,
+        "content": "Mango names the principle in one short sentence. The friend repeats it back in their own words."
       }
     ],
-    "shot_constraint": "Veo renders only 4, 6 or 8 second clips. Beat durations must therefore be even and at least 4s, so the shot planner can compose each beat exactly."
+    "shot_constraint": "Veo renders only 4, 6 or 8 second clips. Beat durations must be even and at least 4s."
   },
   "hard_rules": [
-    "Never a villain, never a character who broke the object on purpose, never blame.",
+    "Mango is in every episode from beat 2 onward and is always the one who works out why. Never sideline her.",
+    "The friend's wrong guess is always reasonable. They are never foolish and are never corrected unkindly.",
+    "Never a villain, never anyone who broke the object on purpose, never blame.",
     "The fix must be physically real. A child watching must not learn something false.",
     "Never depict a repair a child could copy dangerously — no blades, heat, electricity, small swallowable magnets, or climbing.",
-    "The first attempt fails for an honest physical reason, never because a character was careless or silly.",
     "One principle per episode, named in plain words, never jargon.",
+    "Avoid stating exact counts of things on screen unless the count IS the point. If a line does state a count, that count must be repeated in the shot visual so the picture can match it.",
     "No brand names, no real-world product lookalikes, no resemblance to any existing kids property.",
     "Nobody is ever the butt of a joke. Pip is the youngest, never the punchline.",
     "No character asks the audience to like, subscribe or follow."
@@ -179,21 +187,21 @@
         "recency_window": 25,
         "note": "no repeated principle within 25 episodes"
       },
-      "domain": {
-        "recency_window": 4,
-        "note": "rotate which teammate leads the fix"
-      },
-      "owner": {
-        "recency_window": 8,
-        "note": "rotate who brings the job in"
-      },
       "cause": {
         "recency_window": 20,
         "note": "the reason it broke must vary"
       },
-      "failed_attempt": {
+      "visitor": {
+        "recency_window": 4,
+        "note": "rotate which friend brings the job in"
+      },
+      "activity": {
+        "recency_window": 20,
+        "note": "what they were doing when it broke must vary"
+      },
+      "wrong_guess": {
         "recency_window": 15,
-        "note": "the first try that fails must vary"
+        "note": "the friend's incorrect theory must vary"
       }
     },
     "similarity_threshold": 0.62,

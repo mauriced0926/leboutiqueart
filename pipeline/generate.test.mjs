@@ -18,7 +18,7 @@ const test = async (name, fn) => {
 
 const beats = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({ n, name: `beat${n}`, seconds: 30, visual: 'v', caption: 'c', narration: 'n' }));
 const ep = (over) => ({ title: 't', premise: 'p', broken_object: 'o', cause: 'c', fix_principle: 'f',
-  owner: 'w', domain: 'd', failed_attempt: 'fa', beats, description: 'd', tags: [], ...over });
+  visitor: 'wren', activity: 'act', wrong_guess: 'guess', beats, description: 'd', tags: [], ...over });
 
 /** Mock client: returns a queued response per call and records the requests it saw. */
 function mockClient(queue) {
@@ -37,13 +37,13 @@ function mockClient(queue) {
 }
 
 const history = [
-  { episode: 1, premise: 'a stool wobbles because one leg is short', broken_object: 'stool', fix_principle: 'shimming', owner: 'bramble', cause: 'wear', domain: 'load', failed_attempt: 'cloth packing' },
+  { episode: 1, premise: 'a stool wobbles because one leg is short', broken_object: 'stool', fix_principle: 'shimming', visitor: 'bramble', cause: 'wear', activity: 'sitting', wrong_guess: 'swollen wood' },
 ];
 
 console.log('\ngenerateEpisode');
 
 await test('returns a novel episode on first attempt', async () => {
-  const client = mockClient([{ stop_reason: 'end_turn', parsed_output: ep({ premise: 'a lantern wick will not catch a flame', broken_object: 'lantern', fix_principle: 'drawing fuel upward', owner: 'mole', cause: 'soot', domain: 'dm', failed_attempt: 'fa' }) }]);
+  const client = mockClient([{ stop_reason: 'end_turn', parsed_output: ep({ premise: 'a lantern wick will not catch a flame', broken_object: 'lantern', fix_principle: 'drawing fuel upward', owner: 'mole', cause: 'soot' }) }]);
   const { episode, attempts } = await generateEpisode({ bible, history, client });
   assert.equal(episode.episode, 2, 'episode number should follow history');
   assert.equal(attempts.length, 1);
@@ -54,9 +54,9 @@ await test('returns a novel episode on first attempt', async () => {
 await test('rejects a duplicate and retries until novel', async () => {
   const client = mockClient([
     // Attempt 1: a reworded copy of episode 1 — must be caught.
-    { stop_reason: 'end_turn', parsed_output: ep({ premise: 'a stool that wobbles since one of its legs is too short', broken_object: 'stool', fix_principle: 'shimming', owner: 'bramble', cause: 'wear', domain: 'dm', failed_attempt: 'fa' }) },
+    { stop_reason: 'end_turn', parsed_output: ep({ premise: 'a stool that wobbles since one of its legs is too short', broken_object: 'stool', fix_principle: 'shimming', visitor: 'bramble', cause: 'wear', activity: 'sitting', wrong_guess: 'swollen wood' }) },
     // Attempt 2: genuinely different.
-    { stop_reason: 'end_turn', parsed_output: ep({ premise: 'a music box plays too slowly', broken_object: 'music box', fix_principle: 'tension', owner: 'mole', cause: 'a loose spring', domain: 'dm', failed_attempt: 'fa' }) },
+    { stop_reason: 'end_turn', parsed_output: ep({ premise: 'a music box plays too slowly', broken_object: 'music box', fix_principle: 'tension', visitor: 'pip', cause: 'a loose spring', activity: 'winding', wrong_guess: 'snapped' }) },
   ]);
   const { episode, attempts } = await generateEpisode({ bible, history, client });
   assert.equal(attempts.length, 2, 'should have taken two attempts');
@@ -66,8 +66,8 @@ await test('rejects a duplicate and retries until novel', async () => {
 
 await test('feeds the specific rejection reasons into the retry prompt', async () => {
   const client = mockClient([
-    { stop_reason: 'end_turn', parsed_output: ep({ premise: 'a stool that wobbles since one of its legs is too short', broken_object: 'stool', fix_principle: 'shimming', owner: 'bramble', cause: 'wear', domain: 'dm', failed_attempt: 'fa' }) },
-    { stop_reason: 'end_turn', parsed_output: ep({ premise: 'a music box plays too slowly', broken_object: 'music box', fix_principle: 'tension', owner: 'mole', cause: 'a loose spring', domain: 'dm', failed_attempt: 'fa' }) },
+    { stop_reason: 'end_turn', parsed_output: ep({ premise: 'a stool that wobbles since one of its legs is too short', broken_object: 'stool', fix_principle: 'shimming', visitor: 'bramble', cause: 'wear', activity: 'sitting', wrong_guess: 'swollen wood' }) },
+    { stop_reason: 'end_turn', parsed_output: ep({ premise: 'a music box plays too slowly', broken_object: 'music box', fix_principle: 'tension', visitor: 'pip', cause: 'a loose spring', activity: 'winding', wrong_guess: 'snapped' }) },
   ]);
   await generateEpisode({ bible, history, client });
   const retryPrompt = client.calls[1].messages[0].content;
@@ -77,7 +77,7 @@ await test('feeds the specific rejection reasons into the retry prompt', async (
 });
 
 await test('gives up with an actionable error rather than lowering the bar', async () => {
-  const dup = { stop_reason: 'end_turn', parsed_output: ep({ premise: 'a stool wobbles because one leg is short', broken_object: 'stool', fix_principle: 'shimming', owner: 'bramble', cause: 'wear', domain: 'dm', failed_attempt: 'fa' }) };
+  const dup = { stop_reason: 'end_turn', parsed_output: ep({ premise: 'a stool wobbles because one leg is short', broken_object: 'stool', fix_principle: 'shimming', visitor: 'bramble', cause: 'wear', activity: 'sitting', wrong_guess: 'swollen wood' }) };
   const client = mockClient([dup, dup]);
   await assert.rejects(
     () => generateEpisode({ bible, history, client, maxAttempts: 2 }),
@@ -94,7 +94,7 @@ await test('surfaces a safety refusal instead of silently retrying', async () =>
 await test('treats an unparseable response as a retryable attempt', async () => {
   const client = mockClient([
     { stop_reason: 'end_turn', parsed_output: null },
-    { stop_reason: 'end_turn', parsed_output: ep({ premise: 'a kite tail is missing', broken_object: 'kite', fix_principle: 'drag', owner: 'wren', cause: 'a tear', domain: 'dm', failed_attempt: 'fa' }) },
+    { stop_reason: 'end_turn', parsed_output: ep({ premise: 'a kite tail is missing', broken_object: 'kite', fix_principle: 'drag', visitor: 'tolly', cause: 'a tear', activity: 'flying', wrong_guess: 'wind' }) },
   ]);
   const { attempts } = await generateEpisode({ bible, history, client });
   assert.equal(attempts.length, 2);
@@ -112,7 +112,7 @@ await test('first-episode prompt differs from a later one', () => {
   assert.ok(/Recent episodes/.test(userPrompt(5, history, [])));
 });
 await test('uses claude-opus-5 with adaptive thinking', async () => {
-  const client = mockClient([{ stop_reason: 'end_turn', parsed_output: ep({ premise: 'x y z distinct', broken_object: 'bell', fix_principle: 'ringing', owner: 'mole', cause: 'a crack', domain: 'dm', failed_attempt: 'fa' }) }]);
+  const client = mockClient([{ stop_reason: 'end_turn', parsed_output: ep({ premise: 'x y z distinct', broken_object: 'bell', fix_principle: 'ringing', visitor: 'tolly', cause: 'a crack', activity: 'ringing', wrong_guess: 'rust' }) }]);
   await generateEpisode({ bible, history, client });
   assert.equal(client.calls[0].model, 'claude-opus-5');
   assert.deepEqual(client.calls[0].thinking, { type: 'adaptive' });

@@ -49,6 +49,34 @@ export function dialoguePrompt(lines, cast) {
   }).join('\n');
 }
 
+const NUMBER_WORDS = ['one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve'];
+// "fold each one in", "one is short" are not counts of anything drawable. Only keep a
+// number when a noun follows it, not a preposition or verb.
+const NOT_A_NOUN = new Set(['in','is','was','of','at','to','for','and','or','on','by','with',
+  'that','this','more','less','again','here','there','out','up','down','o','a','the','it','but','so']);
+
+/**
+ * Pull any count stated in the dialogue so the shot prompt can echo it.
+ *
+ * Episode 1 had Wren say "six corners" over a pinwheel the image model drew with five.
+ * The renderer never sees the words unless we put them in the visual instruction, so a
+ * stated count and the picture drift apart.
+ */
+export function statedCounts(lines) {
+  const found = new Set();
+  for (const l of lines) {
+    const text = String(l.text ?? '').toLowerCase();
+    for (const w of NUMBER_WORDS) {
+      const m = new RegExp(`\\b${w}\\b\\s+([a-z]+)`).exec(text);
+      if (m && !NOT_A_NOUN.has(m[1])) found.add(`${w} ${m[1]}`);
+    }
+    for (const m of text.matchAll(/\b(\d+)\s+([a-z]+)/g)) {
+      if (!NOT_A_NOUN.has(m[2])) found.add(`${m[1]} ${m[2]}`);
+    }
+  }
+  return [...found];
+}
+
 export function buildShotPrompt({ shot, bible, cast }) {
   const v = bible.visual_style;
   const present = [...new Set(shot.lines.map((l) => l.speaker))];
@@ -64,6 +92,13 @@ export function buildShotPrompt({ shot, bible, cast }) {
       ...present.map((k) => `- ${k}: ${cast[k]?.look ?? ''}`),
       '',
       dialoguePrompt(shot.lines, cast));
+  }
+  const counts = statedCounts(shot.lines);
+  if (counts.length) {
+    parts.push('',
+      'COUNTS THAT MUST MATCH THE PICTURE EXACTLY — the dialogue states these, so the image',
+      'must show exactly this many, no more and no fewer:',
+      ...counts.map((c) => `- ${c}`));
   }
   parts.push('', `Palette: ${v.palette.join(', ')}. No text anywhere in frame.`);
   return parts.join('\n');

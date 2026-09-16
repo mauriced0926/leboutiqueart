@@ -49,29 +49,29 @@ test('same object, different fault is not flagged as duplicate', () => {
 
 console.log('\ncheckNovelty');
 const hist = [
-  { episode: 1, premise: 'a stool wobbles because one leg is short', broken_object: 'stool', fix_principle: 'shimming', owner: 'bramble', cause: 'wear', domain: 'load', failed_attempt: 'packing with cloth' },
-  { episode: 2, premise: 'a kite will not fly because its tail is missing', broken_object: 'kite', fix_principle: 'drag and balance', owner: 'wren', cause: 'lost part', domain: 'air', failed_attempt: 'throwing it harder' },
+  { episode: 1, premise: 'a stool wobbles because one leg is short', broken_object: 'stool', fix_principle: 'shimming', owner: 'bramble', cause: 'wear', visitor: 'v', activity: 'a', wrong_guess: 'g' },
+  { episode: 2, premise: 'a kite will not fly because its tail is missing', broken_object: 'kite', fix_principle: 'drag and balance', owner: 'wren', cause: 'lost part', visitor: 'v', activity: 'a', wrong_guess: 'g' },
 ];
 
 test('a genuinely new episode passes', () => {
-  const r = checkNovelty({ premise: 'a music box plays too slowly because its spring is loose', broken_object: 'music box', fix_principle: 'tension', owner: 'mole', cause: 'loosening', domain: 'small mechanisms', failed_attempt: 'winding it further' }, hist, bible);
+  const r = checkNovelty({ premise: 'a music box plays too slowly because its spring is loose', broken_object: 'music box', fix_principle: 'tension', cause: 'loosening', visitor: 'pip', activity: 'winding it', wrong_guess: 'the spring snapped' }, hist, bible);
   assert.ok(r.ok, r.reasons.join('; '));
 });
 
 test('a reworded duplicate premise is rejected', () => {
-  const r = checkNovelty({ premise: 'a stool that wobbles since one of its legs is too short', broken_object: 'bench', fix_principle: 'packing', owner: 'mole', cause: 'shrinkage', domain: 'load', failed_attempt: 'a folded leaf' }, hist, bible);
+  const r = checkNovelty({ premise: 'a stool that wobbles since one of its legs is too short', broken_object: 'bench', fix_principle: 'packing', owner: 'mole', cause: 'shrinkage', visitor: 'v', activity: 'a', wrong_guess: 'g' }, hist, bible);
   assert.ok(!r.ok);
   assert.ok(r.reasons.some((x) => /similar to episode 1/.test(x)), r.reasons.join('; '));
 });
 
 test('reused object inside its window is rejected with a usable reason', () => {
-  const r = checkNovelty({ premise: 'something entirely unrelated about a lantern wick', broken_object: 'Stool', fix_principle: 'trimming', owner: 'mole', cause: 'soot', domain: 'air', failed_attempt: 'blowing on it' }, hist, bible);
+  const r = checkNovelty({ premise: 'something entirely unrelated about a lantern wick', broken_object: 'Stool', fix_principle: 'trimming', owner: 'mole', cause: 'soot', visitor: 'v', activity: 'a', wrong_guess: 'g' }, hist, bible);
   assert.ok(!r.ok);
   assert.ok(r.reasons.some((x) => /broken_object "Stool" was used in episode 1/.test(x)), r.reasons.join('; '));
 });
 
 test('axis matching is case- and punctuation-insensitive', () => {
-  const r = checkNovelty({ premise: 'unrelated premise about a very different thing', broken_object: '  STOOL! ', fix_principle: 'gluing', owner: 'mole', cause: 'damp', domain: 'fit', failed_attempt: 'string' }, hist, bible);
+  const r = checkNovelty({ premise: 'unrelated premise about a very different thing', broken_object: '  STOOL! ', fix_principle: 'gluing', owner: 'mole', cause: 'damp', visitor: 'v', activity: 'a', wrong_guess: 'g' }, hist, bible);
   assert.ok(!r.ok && r.reasons.some((x) => /broken_object/.test(x)));
 });
 
@@ -82,25 +82,25 @@ test('a missing axis is reported rather than silently passing', () => {
 });
 
 test('empty history accepts anything well-formed', () => {
-  const r = checkNovelty({ premise: 'first ever episode', broken_object: 'cup', fix_principle: 'sealing', owner: 'bramble', cause: 'a chip', domain: 'fit', failed_attempt: 'holding it shut' }, [], bible);
+  const r = checkNovelty({ premise: 'first ever episode', broken_object: 'cup', fix_principle: 'sealing', cause: 'a chip', visitor: 'bramble', activity: 'pouring', wrong_guess: 'too full' }, [], bible);
   assert.ok(r.ok, r.reasons.join('; '));
 });
 
 test('axis outside its recency window is allowed again', () => {
   // Derive the length from the bible so retuning a window cannot silently break this.
-  const ownerWindow = bible.dedupe_axes.axes.owner.recency_window;
+  const ownerWindow = bible.dedupe_axes.axes.visitor.recency_window;
   const long = Array.from({ length: ownerWindow + 1 }, (_, i) => ({
     episode: i + 1, premise: `distinct premise number ${i} about an unrelated object`,
     broken_object: `object${i}`, fix_principle: `principle${i}`,
-    owner: i === 0 ? 'bramble' : `owner${i}`, cause: `cause${i}`,
-    domain: `domain${i}`, failed_attempt: `attempt${i}`,
+    owner: `owner${i}`, cause: `cause${i}`,
+    visitor: i === 0 ? 'bramble' : `visitor${i}`, activity: `activity${i}`, wrong_guess: `guess${i}`,
   }));
-  const r = checkNovelty({ premise: 'a brand new premise concerning a windmill sail', broken_object: 'windmill', fix_principle: 'catching wind', owner: 'bramble', cause: 'a tear', domain: 'lift', failed_attempt: 'a patch' }, long, bible);
+  const r = checkNovelty({ premise: 'a brand new premise concerning a windmill sail', broken_object: 'windmill', fix_principle: 'catching wind', cause: 'a tear', visitor: 'bramble', activity: 'hoisting a sail', wrong_guess: 'old cloth' }, long, bible);
   assert.ok(r.ok, `expected bramble to be reusable after 6 episodes; got: ${r.reasons.join('; ')}`);
 });
 
 test('reasons are specific enough to feed back as generator constraints', () => {
-  const r = checkNovelty({ premise: 'a stool that wobbles since one leg is short', broken_object: 'stool', fix_principle: 'shimming', owner: 'bramble', cause: 'wear', domain: 'load', failed_attempt: 'packing with cloth' }, hist, bible);
+  const r = checkNovelty({ premise: 'a stool that wobbles since one leg is short', broken_object: 'stool', fix_principle: 'shimming', owner: 'bramble', cause: 'wear', visitor: 'v', activity: 'a', wrong_guess: 'g' }, hist, bible);
   assert.ok(r.reasons.length >= 6, `expected every clashing axis reported, got ${r.reasons.length}`);
 });
 
