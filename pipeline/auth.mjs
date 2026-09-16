@@ -13,7 +13,8 @@
  */
 import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
-import { existsSync, readFileSync, appendFileSync } from 'node:fs';
+import { existsSync, readFileSync, appendFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { resolve } from 'node:path';
 import { loadEnv, ROOT } from './lib/config.mjs';
 import { UPLOAD_SCOPE } from './lib/youtube.mjs';
@@ -34,6 +35,12 @@ const PORT = Number(flag('port', 8765));
 // local server entirely and you paste the failed redirect URL back in. Safari shows "cannot
 // connect", but the address bar still holds ?code=... which is all we need.
 const manual = args.includes('--manual');
+// Split manual consent into two commands so it survives across separate invocations —
+// needed when the approving browser and the shell are on different devices, and when the
+// shell cannot hold a process open waiting on stdin.
+const urlOnly = args.includes('--url');
+const exchangeArg = args.includes('--exchange') ? args[args.indexOf('--exchange') + 1] : null;
+const STATE_FILE = new URL('./state/.oauth-state.json', import.meta.url).pathname;
 const CALLBACK_PATH = '/oauth2callback';
 const REDIRECT_URI = `http://localhost:${PORT}${CALLBACK_PATH}`;
 
@@ -94,7 +101,18 @@ working every week with invalid_grant.
 `);
 
 // CSRF guard: Google echoes `state` back, and we refuse anything that doesn't match.
-const state = randomBytes(16).toString('hex');
+// In two-step mode it is persisted so the second command can still verify it.
+let state = randomBytes(16).toString('hex');
+if (exchangeArg) {
+  if (!existsSync(STATE_FILE)) {
+    throw new Error('No pending authorisation. Run: node pipeline/auth.mjs --url');
+  }
+  const saved = JSON.parse(readFileSync(STATE_FILE, 'utf8'));
+  if (Date.now() - saved.created > 30 * 60_000) {
+    throw new Error('That authorisation request is over 30 minutes old. Run --url again.');
+  }
+  state = saved.state;
+}
 
 const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
 authUrl.searchParams.set('client_id', clientId);
@@ -164,8 +182,30 @@ function waitForCode({ timeoutMs = 5 * 60_000 } = {}) {
   });
 }
 
+if (urlOnly) {
+  mkdirSync(dirname(STATE_FILE), { recursive: true });
+  writeFileSync(STATE_FILE, JSON.stringify({ state, port: PORT, created: Date.now() }));
+  console.log('Open this on your phone, sign in, and approve:\n');
+  console.log(`  ${authUrl}\n`);
+  console.log('Safari will then fail to load a localhost page. That is expected and correct.');
+  console.log('Copy the WHOLE address from that failed page and run:\n');
+  console.log('  node pipeline/auth.mjs --exchange "<paste the url here>"\n');
+  process.exit(0);
+}
+
 let code;
-if (manual) {
+if (exchangeArg) {
+  try {
+    const u = new URL(exchangeArg);
+    if (u.searchParams.get('error')) throw new Error(`Google returned "${u.searchParams.get('error')}"`);
+    if (u.searchParams.get('state') !== state) throw new Error('State mismatch — paste the URL from the most recent --url run.');
+    code = u.searchParams.get('code');
+  } catch (e) {
+    if (/^https?:/i.test(exchangeArg)) throw e;
+    code = exchangeArg.trim();  // a bare code is acceptable
+  }
+  if (!code) throw new Error('No authorisation code found in what you pasted.');
+} else if (manual) {
   const { createInterface } = await import('node:readline/promises');
   console.log('MANUAL MODE — no local server. Open this on any device, including a phone:\n');
   console.log(`  ${authUrl}\n`);
