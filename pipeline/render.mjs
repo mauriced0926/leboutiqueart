@@ -64,7 +64,31 @@ if (only && targets.length !== only.length) {
   throw new Error(`Unknown shot id(s): ${missing.join(', ')}`);
 }
 
-const pending = targets.filter((s) => !existsSync(join(clipDir, `${s.id}.mp4`)));
+/**
+ * A cached clip is only reusable if its actual duration still matches the plan. Shot
+ * durations change whenever the beat structure is retuned, and silently reusing a clip of
+ * the wrong length would desync the episode without any visible error.
+ */
+async function cachedClipUsable(shot) {
+  const file = join(clipDir, `${shot.id}.mp4`);
+  if (!existsSync(file)) return false;
+  const ffmpeg = await resolveFfmpeg();
+  if (!ffmpeg) return true; // can't verify without ffmpeg; trust it rather than re-bill
+  try {
+    const { stderr } = await exec(ffmpeg, ['-i', file], { maxBuffer: 8 * 1024 * 1024 }).catch((e) => e);
+    const m = /Duration: (\d+):(\d+):([\d.]+)/.exec(stderr ?? '');
+    if (!m) return true;
+    const actual = Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]);
+    if (Math.abs(actual - shot.seconds) > 0.5) {
+      console.log(`  ${shot.id}: cached clip is ${actual.toFixed(1)}s but plan says ${shot.seconds}s — re-rendering`);
+      return false;
+    }
+    return true;
+  } catch { return true; }
+}
+
+const usable = await Promise.all(targets.map(cachedClipUsable));
+const pending = targets.filter((_, i) => !usable[i]);
 const cached = targets.length - pending.length;
 const pendingCost = estimateCost(pending);
 

@@ -116,25 +116,25 @@
       {
         "n": 2,
         "name": "the-call",
-        "seconds": 25,
+        "seconds": 26,
         "content": "It arrives at the den. Whoever is there reacts. Establish stakes: who needs it, and when."
       },
       {
         "n": 3,
         "name": "diagnose",
-        "seconds": 35,
+        "seconds": 34,
         "content": "Mango turns it over twice and names the actual cause. Close on the fault."
       },
       {
         "n": 4,
         "name": "first-try",
-        "seconds": 35,
+        "seconds": 36,
         "content": "An obvious fix is tried and honestly fails. No blame, no one is foolish."
       },
       {
         "n": 5,
         "name": "who-is-needed",
-        "seconds": 25,
+        "seconds": 24,
         "content": "The cause names a domain; the domain names a teammate. They arrive in character."
       },
       {
@@ -146,16 +146,17 @@
       {
         "n": 7,
         "name": "the-test",
-        "seconds": 25,
+        "seconds": 24,
         "content": "Tested in the same use that broke it in beat 1. It works."
       },
       {
         "n": 8,
         "name": "name-it",
-        "seconds": 15,
+        "seconds": 16,
         "content": "The principle stated once, plainly, in words a four-year-old can repeat."
       }
-    ]
+    ],
+    "shot_constraint": "Veo renders only 4, 6 or 8 second clips. Beat durations must therefore be even and at least 4s, so the shot planner can compose each beat exactly."
   },
   "hard_rules": [
     "Never a villain, never a character who broke the object on purpose, never blame.",

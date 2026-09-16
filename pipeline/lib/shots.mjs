@@ -26,111 +26,89 @@ export function speakSeconds(text) {
  * sentence with a cut in the middle reads as a mistake. Lines are packed into shots until
  * adding the next one would exceed the limit. A wordless beat is split evenly instead.
  */
+/**
+ * Veo accepts only these clip lengths. The API error says "between 4 and 8, inclusive",
+ * which is wrong in a costly way: 5 and 7 are rejected, as is any fractional value.
+ * Verified by probing each value against the live endpoint.
+ */
+export const ALLOWED_SECONDS = [4, 6, 8];
+
+/**
+ * Split `total` seconds into exactly `count` clips drawn from ALLOWED_SECONDS.
+ * Returns null when impossible — every allowed length is even, so an odd total can never
+ * be composed, and a beat must satisfy 4*count <= total <= 8*count.
+ */
+export function composeDurations(total, count) {
+  if (count < 1 || total % 2 !== 0) return null;
+  if (total < 4 * count || total > 8 * count) return null;
+  const parts = Array(count).fill(4);
+  let remaining = total - 4 * count;         // always even
+  for (let i = 0; i < count && remaining > 0; i++) {
+    const add = Math.min(4, remaining);      // 4 -> 6 (+2) or 4 -> 8 (+4)
+    parts[i] += add;
+    remaining -= add;
+  }
+  return remaining === 0 ? parts.sort((a, b) => b - a) : null;
+}
+
+/** How many clips a beat needs so no shot's dialogue overruns 8 seconds. */
+function shotsNeededFor(lines, max) {
+  if (!lines.length) return null;
+  let count = 1, used = 0;
+  for (const l of lines) {
+    const need = Math.min(max, speakSeconds(l.text) + 0.6);
+    if (used + need > max && used > 0) { count++; used = 0; }
+    used += need;
+  }
+  return count;
+}
+
+/**
+ * Split one beat into Veo-renderable shots.
+ *
+ * Dialogue decides how many cuts are needed; the allowed clip lengths decide how long each
+ * one is. A line is never split across a cut. Where the beat cannot hold every line at a
+ * comfortable pace the shots are still valid, but flagged overSubscribed so the caller
+ * knows the script overran rather than finding out in the finished video.
+ */
 export function planBeatShots(beat, max = MAX_SHOT_SECONDS) {
   const lines = beat.lines ?? [];
+  const total = beat.seconds;
 
-  if (!lines.length) {
-    // Even division, so no shot is a sliver — 20s becomes 3 shots of ~6.7s, not 8+8+4.
-    const count = Math.max(1, Math.ceil(beat.seconds / max));
-    const each = beat.seconds / count;
-    const even = Array.from({ length: count }, (_, i) => ({
-      beat: beat.n, index: i, seconds: round(each), lines: [], visual: beat.visual,
-    }));
-    // Same rounding residue as the dialogue path: 20s / 3 rounds to 6.67 x 3 = 20.01.
-    const drift = round(beat.seconds - even.reduce((t, x) => t + x.seconds, 0));
-    if (Math.abs(drift) > 0.001) even[0].seconds = round(even[0].seconds + drift);
-    return even;
+  const minCount = Math.ceil(total / 8);
+  const maxCount = Math.floor(total / 4);
+  const wanted = shotsNeededFor(lines, max) ?? minCount;
+  // Clamp to what the beat's duration can actually be composed into.
+  let count = Math.min(Math.max(wanted, minCount), Math.max(minCount, maxCount));
+
+  let durations = composeDurations(total, count);
+  for (let c = count; !durations && c <= maxCount; c++) durations = composeDurations(total, c);
+  for (let c = count; !durations && c >= minCount; c--) durations = composeDurations(total, c);
+  if (!durations) {
+    throw new Error(
+      `Beat ${beat.n} is ${total}s, which cannot be composed from ${ALLOWED_SECONDS.join('/')}s clips. ` +
+      'Beat durations must be even and at least 4s — see episode_formula.shot_constraint in the bible.'
+    );
   }
+  count = durations.length;
 
-  // A beat can hold at most this many shots without any falling under Veo's 4s floor.
-  // Exceeding it is not a rounding problem, it means the script wrote more dialogue than
-  // the beat's duration can carry — which the planner must report, not paper over.
-  const maxShots = Math.max(1, Math.floor(beat.seconds / MIN_SHOT_SECONDS));
+  const shots = durations.map((seconds, index) => ({
+    beat: beat.n, index, seconds, lines: [], visual: beat.visual,
+  }));
 
-  const shots = [];
-  let current = { beat: beat.n, index: 0, seconds: 0, lines: [], visual: beat.visual };
+  // Fill shots in order, never splitting a line, never exceeding a shot's own length.
+  let si = 0;
   for (const line of lines) {
-    const need = Math.min(max, speakSeconds(line.text) + 0.6); // +0.6s breathing room
-    const wouldOverflow = current.lines.length && current.seconds + need > max;
-    // Only open a new shot if there is room for one; otherwise keep packing the last.
-    if (wouldOverflow && shots.length + 1 < maxShots) {
-      shots.push(current);
-      current = { beat: beat.n, index: shots.length, seconds: 0, lines: [], visual: beat.visual };
-    }
-    current.lines.push(line);
-    current.seconds += need;
-  }
-  if (current.lines.length) shots.push(current);
-
-  // Fit the shots to the beat's scripted duration.
-  //
-  // Proportional scaling alone silently loses time: any shot pushed past the 8s cap is
-  // clamped and its excess vanishes, which turned a 240s script into 188s of shots. So
-  // distribute the remaining time across shots that still have headroom, and if every
-  // shot is already at the cap, append wordless shots to carry what is left rather than
-  // quietly shortening the episode.
-  for (const sh of shots) sh.seconds = clamp(sh.seconds, MIN_SHOT_SECONDS, max);
-  let deficit = round(beat.seconds - shots.reduce((t, x) => t + x.seconds, 0));
-
-  while (deficit > 0.01) {
-    const headroom = shots.filter((x) => x.seconds < max - 0.01);
-    if (!headroom.length) {
-      // Every shot is full — a held reaction shot absorbs the remainder.
-      const extra = Math.min(max, deficit);
-      shots.push({ beat: beat.n, index: shots.length, seconds: round(extra), lines: [], visual: beat.visual });
-      deficit = round(deficit - extra);
-      continue;
-    }
-    const share = deficit / headroom.length;
-    let added = 0;
-    for (const x of headroom) {
-      const give = Math.min(share, max - x.seconds);
-      x.seconds = round(x.seconds + give);
-      added += give;
-    }
-    if (added < 0.01) break; // no progress possible; stop rather than spin
-    deficit = round(deficit - added);
+    const need = Math.min(max, speakSeconds(line.text) + 0.6);
+    const used = shots[si].lines.reduce((t, l) => t + speakSeconds(l.text) + 0.6, 0);
+    if (used > 0 && used + need > shots[si].seconds && si < shots.length - 1) si++;
+    shots[si].lines.push(line);
   }
 
-  // Trim the other way if packing overshot.
-  let excess = round(shots.reduce((t, x) => t + x.seconds, 0) - beat.seconds);
-  while (excess > 0.01) {
-    const trimmable = shots.filter((x) => x.seconds > MIN_SHOT_SECONDS + 0.01);
-    if (!trimmable.length) break;
-    const share = excess / trimmable.length;
-    let removed = 0;
-    for (const x of trimmable) {
-      const take = Math.min(share, x.seconds - MIN_SHOT_SECONDS);
-      x.seconds = round(x.seconds - take);
-      removed += take;
-    }
-    if (removed < 0.01) break;
-    excess = round(excess - removed);
-  }
-
-  enforceMinimum(shots, max);
-
-  // Flag a beat whose dialogue cannot physically fit. The shots are still valid and
-  // renderable — the words will simply be rushed — but the caller should know the script
-  // overran rather than discover it in the finished video.
   const speech = lines.reduce((t, l) => t + speakSeconds(l.text) + 0.6, 0);
-  if (speech > beat.seconds + 0.5) {
-    for (const sh of shots) {
-      sh.overSubscribed = true;
-      sh.overflowSeconds = round(speech - beat.seconds);
-    }
+  if (speech > total + 0.5) {
+    for (const sh of shots) { sh.overSubscribed = true; sh.overflowSeconds = round(speech - total); }
   }
-
-  // Absorb the residue from repeated 2dp rounding into the longest shot, so a beat's
-  // shots sum to its duration exactly. Without this the error compounds across beats and
-  // the episode drifts off its scripted runtime.
-  const residue = round(beat.seconds - shots.reduce((t, x) => t + x.seconds, 0));
-  if (Math.abs(residue) > 0.001) {
-    const target = shots.slice().sort((a, b) => b.seconds - a.seconds)[0];
-    if (target) target.seconds = round(target.seconds + residue);
-  }
-
-  shots.forEach((sh, i) => { sh.index = i; });
   return shots;
 }
 
