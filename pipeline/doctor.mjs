@@ -52,6 +52,24 @@ check('YOUTUBE_API_KEY', set('YOUTUBE_API_KEY'), 'read-only stats and niche scan
 check('YOUTUBE_OAUTH_CLIENT_ID', set('YOUTUBE_OAUTH_CLIENT_ID'), 'uploads');
 check('YOUTUBE_OAUTH_CLIENT_SECRET', set('YOUTUBE_OAUTH_CLIENT_SECRET'), 'uploads');
 check('YOUTUBE_OAUTH_REFRESH_TOKEN', set('YOUTUBE_OAUTH_REFRESH_TOKEN'), 'uploads — run: node pipeline/auth.mjs');
+// Which Veo surface, and whether its credentials are present.
+const veoBackend = env.VEO_BACKEND ?? 'gemini';
+if (veoBackend === 'vertex') {
+  let saOk = false, detail = 'service account for Vertex — IAM & Admin → Service Accounts, role "Vertex AI User"';
+  try { const { loadServiceAccount } = await import('./lib/gcp-auth.mjs'); const sa = loadServiceAccount(env);
+        saOk = true; detail = `${sa.client_email} · project ${sa.project_id}`; }
+  catch (e) { detail = e.message.split('\n')[0]; }
+  check('veo backend: vertex', saOk, detail);
+  if (saOk) {
+    try { const { getAccessToken } = await import('./lib/gcp-auth.mjs'); await getAccessToken(env);
+          check('vertex token exchange', true, 'service account authenticated'); }
+    catch (e) { check('vertex token exchange', false, e.message.split('\n')[0]); }
+  }
+} else {
+  check('veo backend: gemini', set('GEMINI_API_KEY'),
+    'AI Studio key — NOTE: Veo quota here is a fixed 10 requests/day and cannot be raised. Set VEO_BACKEND=vertex for a modifiable quota.');
+}
+
 check('ffmpeg', await ffmpegAvailable(), 'video assembly — brew/apt install ffmpeg');
 check('series bible', existsSync(paths.bible), paths.bible);
 

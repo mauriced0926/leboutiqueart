@@ -12,8 +12,27 @@
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { generateImage } from './media.mjs';
+import { getAccessToken, projectId } from './gcp-auth.mjs';
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
+
+/**
+ * Which API surface to call.
+ *
+ *   'gemini' — AI Studio key. Simple, but Veo's quota there is a fixed tier: 10 requests
+ *              per day, 2 per minute, not modifiable. A 30-clip episode takes three days.
+ *   'vertex' — Google Cloud. Same model, same price, but quotas are per-project and can be
+ *              raised in Vertex AI Quota Management, which is the only route to a daily
+ *              cadence. Authenticates with a service account.
+ */
+export function backendFor(env = process.env) {
+  return env.VEO_BACKEND ?? 'gemini';
+}
+
+const VERTEX_LOCATION = (env) => env.VERTEX_LOCATION ?? 'us-central1';
+const vertexBase = (env) => `https://${VERTEX_LOCATION(env)}-aiplatform.googleapis.com/v1`;
+const vertexModelPath = (env, model) =>
+  `projects/${projectId(env)}/locations/${VERTEX_LOCATION(env)}/publishers/google/models/${model}`;
 
 // The lite tier has a reduced parameter set: no audio, and it rejects negativePrompt
 // outright. Both verified against the live API, neither obvious from the model listing.
@@ -210,7 +229,7 @@ function absentCastNegatives(shot, cast, episodeCast = null) {
 }
 
 /** Start a generation. Returns the long-running operation name. */
-async function startShot({ prompt, seconds, referenceImage, tier, key, negativePrompt = SAFETY_NEGATIVE, onRateLimit }) {
+async function startShot({ prompt, seconds, referenceImage, tier, key, env = process.env, negativePrompt = SAFETY_NEGATIVE, onRateLimit }) {
   const t = TIERS[tier];
   if (!t) throw new Error(`Unknown Veo tier "${tier}". Use: ${Object.keys(TIERS).join(', ')}`);
   if (seconds < MIN_SECONDS || seconds > MAX_SECONDS) {
@@ -222,6 +241,7 @@ async function startShot({ prompt, seconds, referenceImage, tier, key, negativeP
     instance.image = { bytesBase64Encoded: readFileSync(referenceImage).toString('base64'), mimeType: 'image/png' };
   }
 
+  const backend = backendFor(env);
   const body = JSON.stringify({
     instances: [instance],
     parameters: {
@@ -241,9 +261,12 @@ async function startShot({ prompt, seconds, referenceImage, tier, key, negativeP
   // first clip. Waits are long because the limit is per minute, not per second.
   const backoffMs = [30_000, 60_000, 120_000, 240_000];
   for (let attempt = 0; ; attempt++) {
-    const res = await fetch(`${BASE}/models/${t.model}:predictLongRunning?key=${key}`, {
-      method: 'POST', headers: { 'content-type': 'application/json' }, body,
-    });
+    const [url, headers] = backend === 'vertex'
+      ? [`${vertexBase(env)}/${vertexModelPath(env, t.model)}:predictLongRunning`,
+         { 'content-type': 'application/json', authorization: `Bearer ${await getAccessToken(env)}` }]
+      : [`${BASE}/models/${t.model}:predictLongRunning?key=${key}`,
+         { 'content-type': 'application/json' }];
+    const res = await fetch(url, { method: 'POST', headers, body });
     const text = await res.text();
     if (res.ok) return JSON.parse(text).name;
 
@@ -262,11 +285,23 @@ async function startShot({ prompt, seconds, referenceImage, tier, key, negativeP
   }
 }
 
-async function awaitShot({ operation, key, timeoutMs = 10 * 60_000, pollMs = 10_000 }) {
+async function awaitShot({ operation, key, env = process.env, tier = 'fast', timeoutMs = 10 * 60_000, pollMs = 10_000 }) {
+  const backend = backendFor(env);
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     await new Promise((r) => setTimeout(r, pollMs));
-    const res = await fetch(`${BASE}/${operation}?key=${key}`);
+    let res;
+    if (backend === 'vertex') {
+      // Vertex has no GET on the operation: you POST the operation name back to
+      // fetchPredictOperation on the same model.
+      res = await fetch(`${vertexBase(env)}/${vertexModelPath(env, TIERS[tier].model)}:fetchPredictOperation`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${await getAccessToken(env)}` },
+        body: JSON.stringify({ operationName: operation }),
+      });
+    } else {
+      res = await fetch(`${BASE}/${operation}?key=${key}`);
+    }
     const json = await res.json();
     if (json.error) throw new Error(`Veo failed: ${JSON.stringify(json.error).replaceAll(key, '[KEY]').slice(0, 300)}`);
     if (json.done) return json;
@@ -274,7 +309,7 @@ async function awaitShot({ operation, key, timeoutMs = 10 * 60_000, pollMs = 10_
   throw new Error(`Veo timed out after ${Math.round(timeoutMs / 60000)} minutes.`);
 }
 
-async function saveVideo({ done, outputPath, key }) {
+async function saveVideo({ done, outputPath, key, env = process.env }) {
   const r = done.response ?? {};
   const vid = r.generateVideoResponse?.generatedSamples?.[0]?.video ?? r.videos?.[0] ?? r.predictions?.[0];
   if (!vid) throw new Error(`No video in response. Shape: ${JSON.stringify(r).slice(0, 200)}`);
@@ -285,7 +320,11 @@ async function saveVideo({ done, outputPath, key }) {
   } else {
     const uri = vid.uri ?? vid.gcsUri;
     if (!uri) throw new Error('Video had neither inline bytes nor a uri.');
-    const res = await fetch(uri.includes('key=') ? uri : `${uri}${uri.includes('?') ? '&' : '?'}key=${key}`);
+    // Vertex returns a signed or GCS URI and authorises with the bearer token; the Gemini
+    // surface expects the API key appended instead.
+    const res = backendFor(env) === 'vertex'
+      ? await fetch(uri, { headers: { authorization: `Bearer ${await getAccessToken(env)}` } })
+      : await fetch(uri.includes('key=') ? uri : `${uri}${uri.includes('?') ? '&' : '?'}key=${key}`);
     if (!res.ok) throw new Error(`Video download failed (${res.status}).`);
     writeFileSync(outputPath, Buffer.from(await res.arrayBuffer()));
   }
@@ -332,11 +371,11 @@ export async function renderShot({ shot, bible, outputPath, framePath, env = pro
   const negatives = [SAFETY_NEGATIVE, ...absentCastNegatives(shot, bible.cast, episodeCast), 'extra characters', 'restyle'].join(', ');
   const operation = await startShot({
     prompt: buildAnimationPrompt({ shot, bible, cast: bible.cast, prop }),
-    seconds: shot.seconds, referenceImage: frame, tier: chosen, key, negativePrompt: negatives,
+    seconds: shot.seconds, referenceImage: frame, tier: chosen, key, env, negativePrompt: negatives,
     onRateLimit: (i) => onProgress?.({ phase: 'ratelimit', shot: shot.id, ...i }),
   });
-  const done = await awaitShot({ operation, key });
-  const path = await saveVideo({ done, outputPath, key });
+  const done = await awaitShot({ operation, key, env, tier: chosen });
+  const path = await saveVideo({ done, outputPath, key, env });
   onProgress?.({ phase: 'done', shot: shot.id, path });
   return { path, frame, tier: chosen, cost: shot.seconds * TIERS[chosen].usdPerSecond + 0.04 };
 }
