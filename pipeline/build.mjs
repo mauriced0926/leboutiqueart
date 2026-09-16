@@ -8,7 +8,7 @@
  *   node pipeline/build.mjs 12         build one
  *   node pipeline/build.mjs --sheet    (re)generate the character sheet only
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, copyFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadEnv, paths, PIPELINE } from './lib/config.mjs';
 import { generateImage, generateVoiceover, fitAudio, concatAudio, assemble, ffmpegAvailable } from './lib/media.mjs';
@@ -20,6 +20,8 @@ const env = loadEnv();
 const args = process.argv.slice(2);
 const only = args.find((a) => /^\d+$/.test(a));
 const sheetOnly = args.includes('--sheet');
+const candidateCount = Number(args[args.indexOf('--candidates') + 1]) || 0;
+const useCandidate = args.includes('--use-sheet') ? args[args.indexOf('--use-sheet') + 1] : null;
 // Images without assembly: the QA pass for character consistency, and it needs no ffmpeg.
 const imagesOnly = args.includes('--images-only');
 
@@ -69,24 +71,35 @@ function safetyPrompt() {
   ].join('\n');
 }
 
-async function buildCharacterSheet() {
+async function buildCharacterSheet(outputPath = SHEET) {
   mkdirSync(ASSETS, { recursive: true });
-  console.log('Generating character sheet (once — every episode is conditioned on it)…');
+  if (outputPath === SHEET) console.log('Generating character sheet (once — every episode is conditioned on it)…');
+  const names = Object.keys(bible.cast);
   await generateImage({
     prompt: [
-      'A character reference sheet for an animated children\'s series.',
-      'Show the two characters below, full body, neutral standing poses, plain background.',
-      'This is a model sheet: clear, consistent, no scenery.',
+      `A character model sheet for an animated children's series. Exactly ${names.length} characters,`,
+      'one figure each, no duplicates, arranged left to right in this order:',
+      names.map((n, i) => `${i + 1}. ${n}`).join(', ') + '.',
+      'Full body, neutral standing pose, facing forward, plain flat background, no scenery.',
       '',
       castPrompt(),
+      '',
+      // The sheet is fed back as a reference image, so anything in it propagates into every
+      // shot. The first version came back with baked-in name labels and a duplicated badger.
+      'ABSOLUTELY NO TEXT of any kind: no names, no labels, no captions, no letters or numbers',
+      'anywhere in the image. Each character appears exactly once — no repeated or mirrored figures.',
+      'Keep every character clearly distinct in silhouette, size and colour.',
+      'The characters FILL THE FRAME edge to edge — large, centred, minimal empty space,',
+      'since this image is used as a visual reference and detail matters.',
+      // The folded ear is Mango's identity marker and went missing when the cast grew.
+      "Mango's LEFT ear tip is clearly folded over — this detail must be visible and is not optional.",
       '',
       safetyPrompt(),
     ].join('\n'),
     stylePrompt: stylePrompt(),
-    outputPath: SHEET,
+    outputPath,
     env,
   });
-  console.log(`✓ ${SHEET}`);
 }
 
 async function buildEpisode(dir) {
@@ -174,6 +187,29 @@ async function buildEpisode(dir) {
 
 // The character sheet is pure image generation — don't gate it behind ffmpeg, which is
 // only needed once we start fitting audio and assembling video.
+// Pick-and-lock, because the sheet is not reproducible: successive generations drop or
+// change defined traits (a lost pair of glasses, a missing folded ear). Every shot in the
+// series is conditioned on this one image, so it is chosen once by a human and then frozen.
+if (useCandidate) {
+  const from = join(ASSETS, 'candidates', `sheet-${useCandidate}.png`);
+  if (!existsSync(from)) throw new Error(`No candidate ${useCandidate} at ${from}`);
+  copyFileSync(from, SHEET);
+  console.log(`✓ Locked candidate ${useCandidate} as the canonical sheet:\n  ${SHEET}`);
+  console.log('  Commit it — this asset should never be regenerated casually.');
+  process.exit(0);
+}
+
+if (candidateCount) {
+  mkdirSync(join(ASSETS, 'candidates'), { recursive: true });
+  for (let i = 1; i <= candidateCount; i++) {
+    process.stdout.write(`  candidate ${i}/${candidateCount}… `);
+    await buildCharacterSheet(join(ASSETS, 'candidates', `sheet-${i}.png`));
+    console.log('✓');
+  }
+  console.log(`\nReview them, then lock one:\n  node pipeline/build.mjs --use-sheet <n>\n`);
+  process.exit(0);
+}
+
 if (sheetOnly) { await buildCharacterSheet(); process.exit(0); }
 
 if (!imagesOnly && !(await ffmpegAvailable())) {

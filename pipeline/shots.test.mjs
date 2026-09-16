@@ -54,6 +54,22 @@ test('is deterministic across runs', () => {
   assert.deepEqual(planBeatShots(beat), planBeatShots(beat));
 });
 
+test('every shot sits inside Veo\'s 4-8s window', () => {
+  // Veo rejects durationSeconds outside 4..8. A violation only surfaces mid-render, after
+  // billing for every clip generated before it.
+  for (const seconds of [15, 20, 25, 35, 41, 60]) {
+    for (const lineCount of [0, 1, 2, 5, 9]) {
+      const lines = Array.from({ length: lineCount }, (_, i) => line(`s${i}`, 8));
+      const shots = planBeatShots({ n: 9, seconds, visual: 'v', lines });
+      for (const sh of shots) {
+        assert.ok(sh.seconds >= MIN_SHOT_SECONDS - 0.01 && sh.seconds <= MAX_SHOT_SECONDS + 0.01,
+          `beat ${seconds}s x ${lineCount} lines gave a ${sh.seconds}s shot`);
+      }
+      assert.equal(Math.round(shots.reduce((t, x) => t + x.seconds, 0) * 100) / 100, seconds);
+    }
+  }
+});
+
 console.log('\nplanEpisodeShots');
 test('episode total matches the sum of its beats', () => {
   const episode = { beats: [

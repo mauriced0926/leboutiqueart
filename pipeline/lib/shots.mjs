@@ -8,9 +8,10 @@
  */
 
 export const MAX_SHOT_SECONDS = 8;
-// Below this a shot reads as a glitch rather than a cut, and still bills as a full
-// generation. Shorter shots borrow time from the longest shot instead.
-export const MIN_SHOT_SECONDS = 2;
+// Veo's hard floor: durationSeconds must be between 4 and 8 inclusive (verified against
+// the live API). A shorter shot is rejected outright, which mid-render means paying for
+// every clip generated before the failure. Shots below this borrow from the longest shot.
+export const MIN_SHOT_SECONDS = 4;
 
 /** Rough speaking time. 2.5 words/sec is the rate the script prompt writes to. */
 export function speakSeconds(text) {
@@ -41,12 +42,18 @@ export function planBeatShots(beat, max = MAX_SHOT_SECONDS) {
     return even;
   }
 
+  // A beat can hold at most this many shots without any falling under Veo's 4s floor.
+  // Exceeding it is not a rounding problem, it means the script wrote more dialogue than
+  // the beat's duration can carry — which the planner must report, not paper over.
+  const maxShots = Math.max(1, Math.floor(beat.seconds / MIN_SHOT_SECONDS));
+
   const shots = [];
   let current = { beat: beat.n, index: 0, seconds: 0, lines: [], visual: beat.visual };
   for (const line of lines) {
-    // A line longer than a whole shot gets its own shot and is flagged, not silently cut.
-    const need = Math.min(max, speakSeconds(line.text) + 0.6); // +0.6s of breathing room
-    if (current.lines.length && current.seconds + need > max) {
+    const need = Math.min(max, speakSeconds(line.text) + 0.6); // +0.6s breathing room
+    const wouldOverflow = current.lines.length && current.seconds + need > max;
+    // Only open a new shot if there is room for one; otherwise keep packing the last.
+    if (wouldOverflow && shots.length + 1 < maxShots) {
       shots.push(current);
       current = { beat: beat.n, index: shots.length, seconds: 0, lines: [], visual: beat.visual };
     }
@@ -62,7 +69,7 @@ export function planBeatShots(beat, max = MAX_SHOT_SECONDS) {
   // distribute the remaining time across shots that still have headroom, and if every
   // shot is already at the cap, append wordless shots to carry what is left rather than
   // quietly shortening the episode.
-  for (const sh of shots) sh.seconds = clamp(sh.seconds, 2, max);
+  for (const sh of shots) sh.seconds = clamp(sh.seconds, MIN_SHOT_SECONDS, max);
   let deficit = round(beat.seconds - shots.reduce((t, x) => t + x.seconds, 0));
 
   while (deficit > 0.01) {
@@ -88,12 +95,12 @@ export function planBeatShots(beat, max = MAX_SHOT_SECONDS) {
   // Trim the other way if packing overshot.
   let excess = round(shots.reduce((t, x) => t + x.seconds, 0) - beat.seconds);
   while (excess > 0.01) {
-    const trimmable = shots.filter((x) => x.seconds > 2.01);
+    const trimmable = shots.filter((x) => x.seconds > MIN_SHOT_SECONDS + 0.01);
     if (!trimmable.length) break;
     const share = excess / trimmable.length;
     let removed = 0;
     for (const x of trimmable) {
-      const take = Math.min(share, x.seconds - 2);
+      const take = Math.min(share, x.seconds - MIN_SHOT_SECONDS);
       x.seconds = round(x.seconds - take);
       removed += take;
     }
@@ -102,6 +109,17 @@ export function planBeatShots(beat, max = MAX_SHOT_SECONDS) {
   }
 
   enforceMinimum(shots, max);
+
+  // Flag a beat whose dialogue cannot physically fit. The shots are still valid and
+  // renderable — the words will simply be rushed — but the caller should know the script
+  // overran rather than discover it in the finished video.
+  const speech = lines.reduce((t, l) => t + speakSeconds(l.text) + 0.6, 0);
+  if (speech > beat.seconds + 0.5) {
+    for (const sh of shots) {
+      sh.overSubscribed = true;
+      sh.overflowSeconds = round(speech - beat.seconds);
+    }
+  }
 
   // Absorb the residue from repeated 2dp rounding into the longest shot, so a beat's
   // shots sum to its duration exactly. Without this the error compounds across beats and
