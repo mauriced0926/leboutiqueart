@@ -148,6 +148,9 @@ export function styleBlock(bible) {
     'The artwork fills the entire frame edge to edge: no border, no margin, no mat, no',
     'vignette, no page edge, no drop shadow around the image.',
     "Mango's folded ear tip is always her LEFT ear; her muzzle stays short and rounded.",
+    // Bramble came back wearing glasses on his eyes AND a second pair pushed up on his head.
+    'Each character wears exactly ONE of each item, in the position described. Never a',
+    'duplicate pair of glasses, never an item both worn and pushed up.',
   ].join('\n');
 }
 

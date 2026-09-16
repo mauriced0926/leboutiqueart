@@ -46,7 +46,7 @@
       "species": "hedgehog",
       "age_read": "child, about 6",
       "domain": "small mechanisms, friction, fit",
-      "look": "dusty brown, round glasses too big for his face, a red neckerchief",
+      "look": "dusty brown, a single pair of round glasses worn ON HIS EYES at all times — never pushed up onto his head, never a second pair anywhere in frame — and a red neckerchief",
       "voice_direction": "quick, slightly anxious, bright",
       "catch_behaviour": "worries out loud so someone can reassure him",
       "constant": false
@@ -106,7 +106,8 @@
     "camera": "locked-off mid shots and one close-up on the hands at the fix moment",
     "aspect": "1080x1920 vertical",
     "text_on_screen": "one short caption per beat, bottom third, never covering hands",
-    "consistency_rule": "Every generation prompt must include the cast look block verbatim plus the palette. Character drift across episodes is the single most visible sign of machine production."
+    "consistency_rule": "Every generation prompt must include the cast look block verbatim plus the palette. Character drift across episodes is the single most visible sign of machine production.",
+    "worn_items_rule": "Each character wears exactly one of each item, in the position given in the cast description. Never render a duplicate or a second copy pushed up, hung nearby or held."
   },
   "episode_formula": {
     "engine": "A friend was doing something ordinary and it went wrong. They bring it to Mango and say what they were doing, what broke, and what they think they might have done. Mango asks, looks, finds the real cause, explains the idea in plain words BEFORE touching it, and then they mend it together — the friend doing part of it with Mango guiding.",
