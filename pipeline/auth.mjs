@@ -29,6 +29,11 @@ const flag = (name, fallback) => {
 };
 
 const PORT = Number(flag('port', 8765));
+// Phone-only consent: Google redirects to localhost, which on a phone is the PHONE's
+// localhost, not the server's — so the callback cannot land. In manual mode we skip the
+// local server entirely and you paste the failed redirect URL back in. Safari shows "cannot
+// connect", but the address bar still holds ?code=... which is all we need.
+const manual = args.includes('--manual');
 const CALLBACK_PATH = '/oauth2callback';
 const REDIRECT_URI = `http://localhost:${PORT}${CALLBACK_PATH}`;
 
@@ -82,6 +87,10 @@ A "Desktop app" client needs no registration — any loopback port is accepted.
 
 console.log(`Your Google account must be a Test user under
   APIs & Services → OAuth consent screen, unless the app is published.
+
+IMPORTANT for unattended use: an External app left in "Testing" issues refresh
+tokens that expire after 7 days. Publish the app first, or the pipeline stops
+working every week with invalid_grant.
 `);
 
 // CSRF guard: Google echoes `state` back, and we refuse anything that doesn't match.
@@ -155,7 +164,29 @@ function waitForCode({ timeoutMs = 5 * 60_000 } = {}) {
   });
 }
 
-const code = await waitForCode();
+let code;
+if (manual) {
+  const { createInterface } = await import('node:readline/promises');
+  console.log('MANUAL MODE — no local server. Open this on any device, including a phone:\n');
+  console.log(`  ${authUrl}\n`);
+  console.log('Approve it. The browser will then fail to load a localhost page — that is expected.');
+  console.log('Copy the whole address bar from that failed page and paste it below.\n');
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const pasted = (await rl.question('Paste the redirect URL (or just the code): ')).trim();
+  rl.close();
+  try {
+    const u = new URL(pasted);
+    if (u.searchParams.get('error')) throw new Error(`Google returned "${u.searchParams.get('error')}"`);
+    if (u.searchParams.get('state') !== state) throw new Error('State mismatch — paste the URL from the page THIS command opened.');
+    code = u.searchParams.get('code');
+  } catch (e) {
+    if (/^https?:/i.test(pasted)) throw e;
+    code = pasted;  // a bare code was pasted
+  }
+  if (!code) throw new Error('No authorisation code found in what you pasted.');
+} else {
+  code = await waitForCode();
+}
 console.log('✓ Code received, exchanging for tokens…');
 
 const res = await fetch('https://oauth2.googleapis.com/token', {
