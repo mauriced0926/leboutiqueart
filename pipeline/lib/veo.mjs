@@ -93,15 +93,21 @@ export function statedCounts(lines) {
  * mentioned in the shot's visual description. Without this, a silent shot would exclude
  * every character and render an empty room.
  */
-export function charactersInShot(shot, cast) {
-  const speakers = [...new Set(shot.lines.map((l) => l.speaker))];
-  if (speakers.length) return speakers;
+export function charactersInShot(shot, cast, episodeCast = null) {
+  const speakers = new Set(shot.lines.map((l) => l.speaker));
   const text = String(shot.visual ?? '').toLowerCase();
-  return Object.keys(cast).filter((k) => new RegExp(`\\b${k}\\b`).test(text));
+  for (const k of Object.keys(cast)) if (new RegExp(`\\b${k}\\b`).test(text)) speakers.add(k);
+
+  // From the arrival beat onward everyone in the episode is standing in the den, so they
+  // must be in every frame. Listing only the speakers let the visitor vanish from a shot
+  // and reappear in the next one — he popped in and out across the cut.
+  if (episodeCast && shot.beat >= 2) for (const k of episodeCast) speakers.add(k);
+
+  return [...speakers];
 }
 
 export function buildFramePrompt({ shot, bible, cast, episodeCast = null, anchorFrame = null }) {
-  const present = charactersInShot(shot, cast);
+  const present = charactersInShot(shot, cast, episodeCast);
   // Exclude only cast who are not in this EPISODE. Excluding everyone who is not speaking
   // in this shot wrongly banished the visitor, who stands in the den for the whole scene.
   const inEpisode = episodeCast ?? Object.keys(cast);
@@ -113,7 +119,7 @@ export function buildFramePrompt({ shot, bible, cast, episodeCast = null, anchor
   ];
   if (present.length) {
     parts.push('',
-      'ONLY these characters appear in this shot:',
+      'EXACTLY these characters appear in this shot — all of them, and no others:',
       ...present.map((k) => `- ${k.toUpperCase()}: ${cast[k]?.look ?? ''}`));
   }
   if (absent.length) {
@@ -177,8 +183,8 @@ export function buildAnimationPrompt({ shot, bible, cast }) {
 }
 
 /** Cast members who must not appear, as negative-prompt terms. */
-function absentCastNegatives(shot, cast) {
-  const present = new Set(charactersInShot(shot, cast));
+function absentCastNegatives(shot, cast, episodeCast = null) {
+  const present = new Set(charactersInShot(shot, cast, episodeCast));
   return Object.entries(cast)
     .filter(([k]) => !present.has(k))
     .map(([, c]) => c.species)
@@ -280,7 +286,7 @@ export async function renderShot({ shot, bible, outputPath, framePath, env = pro
   }
 
   onProgress?.({ phase: 'animate', shot: shot.id, tier: chosen });
-  const negatives = [SAFETY_NEGATIVE, ...absentCastNegatives(shot, bible.cast), 'extra characters', 'restyle'].join(', ');
+  const negatives = [SAFETY_NEGATIVE, ...absentCastNegatives(shot, bible.cast, episodeCast), 'extra characters', 'restyle'].join(', ');
   const operation = await startShot({
     prompt: buildAnimationPrompt({ shot, bible, cast: bible.cast }),
     seconds: shot.seconds, referenceImage: frame, tier: chosen, key, negativePrompt: negatives,
