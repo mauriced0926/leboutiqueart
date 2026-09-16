@@ -11,6 +11,7 @@
 
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { generateImage } from './media.mjs';
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
@@ -77,35 +78,99 @@ export function statedCounts(lines) {
   return [...found];
 }
 
-export function buildShotPrompt({ shot, bible, cast }) {
-  const v = bible.visual_style;
-  const present = [...new Set(shot.lines.map((l) => l.speaker))];
+/**
+ * Prompt for the shot's FIRST FRAME, rendered by the image model.
+ *
+ * This exists because Veo's `image` parameter is first-frame conditioning, not a character
+ * reference library. Handing it the five-character model sheet made it invent a scene,
+ * pick whichever character dominated the sheet, and drop the art style — one clip put
+ * Wren's dialogue in Mango's mouth and grew a feathered wing on the fox. The image model
+ * does honour the sheet, so the frame is composed there and Veo only animates it.
+ */
+/**
+ * Who is in this shot. Speakers are definitive, but a wordless beat has none — the
+ * cold-open shows the visitor and says nothing — so fall back to naming the cast members
+ * mentioned in the shot's visual description. Without this, a silent shot would exclude
+ * every character and render an empty room.
+ */
+export function charactersInShot(shot, cast) {
+  const speakers = [...new Set(shot.lines.map((l) => l.speaker))];
+  if (speakers.length) return speakers;
+  const text = String(shot.visual ?? '').toLowerCase();
+  return Object.keys(cast).filter((k) => new RegExp(`\\b${k}\\b`).test(text));
+}
+
+export function buildFramePrompt({ shot, bible, cast }) {
+  const present = charactersInShot(shot, cast);
+  const absent = Object.keys(cast).filter((k) => !present.includes(k));
   const parts = [
-    `${v.medium}. ${v.line}. Soft, warm, gentle children's animation.`,
-    `Setting: ${bible.world.setting}. ${bible.world.time_of_day}.`,
+    `Scene from "${bible.series.title}". Setting: ${bible.world.setting}.`,
     '',
     `SHOT: ${shot.visual}`,
   ];
   if (present.length) {
     parts.push('',
-      'Characters in this shot (match the reference image exactly):',
-      ...present.map((k) => `- ${k}: ${cast[k]?.look ?? ''}`),
-      '',
-      dialoguePrompt(shot.lines, cast));
+      'ONLY these characters appear in this shot:',
+      ...present.map((k) => `- ${k.toUpperCase()}: ${cast[k]?.look ?? ''}`));
+  }
+  if (absent.length) {
+    // Naming who is absent matters: the renderer otherwise drifts extra cast into frame.
+    parts.push('', `NOT in this shot — none of these may appear: ${absent.join(', ')}.`);
   }
   const counts = statedCounts(shot.lines);
   if (counts.length) {
     parts.push('',
-      'COUNTS THAT MUST MATCH THE PICTURE EXACTLY — the dialogue states these, so the image',
-      'must show exactly this many, no more and no fewer:',
+      'COUNTS THAT MUST MATCH EXACTLY — the dialogue states these, so show exactly this many:',
       ...counts.map((c) => `- ${c}`));
   }
-  parts.push('', `Palette: ${v.palette.join(', ')}. No text anywhere in frame.`);
+  parts.push('', safetyBlock(bible));
   return parts.join('\n');
 }
 
+export function styleBlock(bible) {
+  const v = bible.visual_style;
+  return [
+    `Medium: ${v.medium}. Line: ${v.line}.`,
+    `Palette (use only these): ${v.palette.join(', ')}.`,
+    `Lighting: ${bible.world.time_of_day}. Framing: ${v.camera}. Vertical ${v.aspect}.`,
+    'No text, no letters, no watermarks, no signature anywhere in the image.',
+    "Mango's folded ear tip is always her LEFT ear; her muzzle stays short and rounded.",
+  ].join('\n');
+}
+
+function safetyBlock(bible) {
+  return [
+    'HARD CONSTRAINTS — these override anything above:',
+    ...bible.hard_rules.map((r) => `- ${r}`),
+    '- Nothing sharp, hot or electrical anywhere in frame, including background dressing.',
+    '  Safe tools only: wooden mallet, twine, glue pot, cloth, brush, clamp, sandpaper, pencil.',
+  ].join('\n');
+}
+
+/** Prompt for ANIMATING an already-composed frame. Veo must not reinvent the picture. */
+export function buildAnimationPrompt({ shot, bible, cast }) {
+  const parts = [
+    'Animate this exact illustration. Keep the art style, colours, composition and every',
+    'character precisely as shown. Do not restyle it, do not add or replace any character.',
+    'Gentle, unhurried children\'s animation. Subtle motion. Locked-off camera.',
+    '',
+    `ACTION: ${shot.visual}`,
+  ];
+  if (shot.lines.length) parts.push('', dialoguePrompt(shot.lines, cast));
+  return parts.join('\n');
+}
+
+/** Cast members who must not appear, as negative-prompt terms. */
+function absentCastNegatives(shot, cast) {
+  const present = new Set(charactersInShot(shot, cast));
+  return Object.entries(cast)
+    .filter(([k]) => !present.has(k))
+    .map(([, c]) => c.species)
+    .filter(Boolean);
+}
+
 /** Start a generation. Returns the long-running operation name. */
-async function startShot({ prompt, seconds, referenceImage, tier, key }) {
+async function startShot({ prompt, seconds, referenceImage, tier, key, negativePrompt = SAFETY_NEGATIVE }) {
   const t = TIERS[tier];
   if (!t) throw new Error(`Unknown Veo tier "${tier}". Use: ${Object.keys(TIERS).join(', ')}`);
   if (seconds < MIN_SECONDS || seconds > MAX_SECONDS) {
@@ -125,7 +190,7 @@ async function startShot({ prompt, seconds, referenceImage, tier, key }) {
         aspectRatio: '9:16',
         durationSeconds: seconds,
         resolution: '1080p',
-        negativePrompt: SAFETY_NEGATIVE,
+        negativePrompt,
         sampleCount: 1,
       },
     }),
@@ -169,8 +234,13 @@ async function saveVideo({ done, outputPath, key }) {
   return outputPath;
 }
 
-/** Render one shot. Tier defaults to lite for wordless shots — it cannot produce audio. */
-export async function renderShot({ shot, bible, outputPath, referenceImage, env = process.env, tier, onProgress }) {
+/**
+ * Render one shot: compose a first frame with the image model, then animate it with Veo.
+ *
+ * `framePath` is cached separately from the clip, so re-rendering an animation does not
+ * re-bill the frame, and a frame you have approved by eye is reused verbatim.
+ */
+export async function renderShot({ shot, bible, outputPath, framePath, env = process.env, tier, onProgress }) {
   const key = env.GEMINI_API_KEY;
   if (!key) throw new Error('GEMINI_API_KEY is not set in .env.local.');
 
@@ -179,13 +249,28 @@ export async function renderShot({ shot, bible, outputPath, referenceImage, env 
     throw new Error(`Shot ${shot.id} has dialogue but tier "${chosen}" cannot generate audio. Use fast or standard.`);
   }
 
-  const prompt = buildShotPrompt({ shot, bible, cast: bible.cast });
-  onProgress?.({ phase: 'start', shot: shot.id, tier: chosen });
-  const operation = await startShot({ prompt, seconds: shot.seconds, referenceImage, tier: chosen, key });
+  const frame = framePath ?? outputPath.replace(/\.mp4$/, '.png');
+  if (!existsSync(frame)) {
+    onProgress?.({ phase: 'frame', shot: shot.id });
+    await generateImage({
+      prompt: buildFramePrompt({ shot, bible, cast: bible.cast }),
+      stylePrompt: styleBlock(bible),
+      referenceImages: [bible.__sheetPath].filter(Boolean),
+      outputPath: frame,
+      env,
+    });
+  }
+
+  onProgress?.({ phase: 'animate', shot: shot.id, tier: chosen });
+  const negatives = [SAFETY_NEGATIVE, ...absentCastNegatives(shot, bible.cast), 'extra characters', 'restyle'].join(', ');
+  const operation = await startShot({
+    prompt: buildAnimationPrompt({ shot, bible, cast: bible.cast }),
+    seconds: shot.seconds, referenceImage: frame, tier: chosen, key, negativePrompt: negatives,
+  });
   const done = await awaitShot({ operation, key });
   const path = await saveVideo({ done, outputPath, key });
   onProgress?.({ phase: 'done', shot: shot.id, path });
-  return { path, tier: chosen, cost: shot.seconds * TIERS[chosen].usdPerSecond };
+  return { path, frame, tier: chosen, cost: shot.seconds * TIERS[chosen].usdPerSecond + 0.04 };
 }
 
 /** What an episode's shot list will cost, by tier. */

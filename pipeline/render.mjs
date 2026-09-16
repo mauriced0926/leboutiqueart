@@ -114,7 +114,9 @@ if (!stitchOnly) {
     process.stdout.write(`  ${shot.id} (${shot.seconds}s)… `);
     const started = Date.now();
     try {
-      const r = await renderShot({ shot, bible, outputPath: out, referenceImage: SHEET, env });
+      const r = await renderShot({ shot, bible: { ...bible, __sheetPath: SHEET }, outputPath: out,
+        framePath: join(clipDir, `${shot.id}.png`), env,
+        onProgress: (p) => { if (p.phase === 'frame') process.stdout.write('frame… '); if (p.phase === 'animate') process.stdout.write('animate… '); } });
       spent += r.cost;
       console.log(`✓ ${r.tier} · ${Math.round((Date.now() - started) / 1000)}s · $${r.cost.toFixed(2)}`);
     } catch (e) {
