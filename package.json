@@ -14,7 +14,8 @@
     "ep:publish": "node pipeline/publish.mjs",
     "ep:test": "node pipeline/dedupe.test.mjs && node pipeline/generate.test.mjs && node pipeline/media.test.mjs && node pipeline/providers.test.mjs && node pipeline/shots.test.mjs",
     "ep:build": "node pipeline/build.mjs",
-    "ep:doctor": "node pipeline/doctor.mjs"
+    "ep:doctor": "node pipeline/doctor.mjs",
+    "ep:render": "node pipeline/render.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
