@@ -22,37 +22,69 @@
   },
   "series": {
     "title": "Fix-It Forest",
-    "logline": "In a hollow stump at the edge of the birch wood, a small fox named Mango fixes one broken thing for one forest friend, every day.",
+    "logline": "A team of five forest fixers, each good at a different kind of problem, mends one broken thing together every episode.",
     "why_this_survives_policy": "One authored property with a fixed cast, a fixed visual style and a fixed 5-beat structure. Every episode is a genuinely different repair with a different physical principle, produced against a dedupe gate. That is the opposite of near-duplicate mass production — the standard YouTube's inauthentic-content policy actually enforces.",
-    "target_runtime_seconds": 35,
-    "runtime_rationale": "Measured median for character-led kids Shorts was 36s (docs/measured/niche-scan-2026-09-15.md).",
+    "target_runtime_seconds": 240,
+    "runtime_rationale": "Long-form (3-5 min) is where kids watch time and revenue actually live; Shorts are cut from each episode for discovery. See docs/youtube-kids-shorts-niche-research.md §2.1.",
     "made_for_kids": true,
-    "made_for_kids_rationale": "Content is child-directed — a talking animal fixing toys for a preschool audience. COPPA requires the label; mislabelling risks ~$53k/violation. Accept the ~$1-3 RPM and treat Shorts as the discovery engine per the research doc §2.1."
+    "made_for_kids_rationale": "Content is child-directed — a talking animal fixing toys for a preschool audience. COPPA requires the label; mislabelling risks ~$53k/violation. Accept the ~$1-3 RPM and treat Shorts as the discovery engine per the research doc §2.1.",
+    "format_note": "Ensemble-of-specialists structure, a long-standing genre convention. Original cast, world and designs throughout — no borrowed characters, names, uniforms, vehicles or visual language from any existing property."
   },
   "cast": {
     "mango": {
-      "role": "protagonist",
+      "role": "lead — works out WHY it broke",
       "species": "red fox",
-      "age_read": "child, about 6",
-      "look": "rust-orange fur, cream chest, one ear permanently folded at the tip, wears a slightly-too-big canvas apron with four pockets",
-      "personality": "calm, curious, never panics, narrates what she notices rather than what she feels",
-      "voice": "warm, unhurried, mid-register, slight smile in the tone",
-      "never": "never shouts, never uses sarcasm, never fails in a way that scares the owner of the object"
+      "age_read": "child, about 7",
+      "domain": "diagnosis and leverage",
+      "look": "rust-orange fur, cream chest, one ear permanently folded at the tip, green canvas apron with four pockets",
+      "voice_direction": "warm, unhurried, mid-register, a smile in the tone",
+      "catch_behaviour": "turns the broken thing over twice before saying anything"
     },
     "bramble": {
-      "role": "recurring friend",
+      "role": "precision — small parts, fasteners, threading",
       "species": "hedgehog",
-      "look": "dusty brown, wears round glasses too big for his face",
-      "function": "brings the broken object about 1 episode in 4; worries out loud so Mango can reassure"
+      "age_read": "child, about 6",
+      "domain": "small mechanisms, friction, fit",
+      "look": "dusty brown, round glasses too big for his face, a red neckerchief",
+      "voice_direction": "quick, slightly anxious, bright",
+      "catch_behaviour": "worries out loud so someone can reassure him"
+    },
+    "tolly": {
+      "role": "strength — structure, weight, timber",
+      "species": "badger",
+      "age_read": "older child, about 10",
+      "domain": "load, balance, support",
+      "look": "broad, charcoal and cream striped face, rolled shirtsleeves, a wooden mallet through the belt",
+      "voice_direction": "low, slow, gentle — never gruff",
+      "catch_behaviour": "tests everything by leaning on it"
+    },
+    "wren": {
+      "role": "height and air — anything up high, anything that flies",
+      "species": "wren",
+      "age_read": "child, about 6",
+      "domain": "air, lift, balance",
+      "look": "tiny, warm brown with a cream eye-stripe, a twine tool-belt",
+      "voice_direction": "fast, chirpy, high",
+      "catch_behaviour": "always arrives last and from above"
+    },
+    "pip": {
+      "role": "small spaces — reaches what nobody else can",
+      "species": "harvest mouse",
+      "age_read": "youngest, about 4",
+      "domain": "tight spaces, threading, tiny things",
+      "look": "pale gold, enormous ears, wears a thimble as a helmet",
+      "voice_direction": "very small, breathy, delighted",
+      "catch_behaviour": "narrates what she finds inside things"
     }
   },
   "world": {
     "setting": "a hollow stump workshop at the edge of a birch wood, lit by one round window",
     "props_that_recur": [
-      "the pegboard of tools",
+      "the pegboard of safe tools",
       "the tin of odd buttons",
       "the rolled twine spool",
-      "the three-legged stool"
+      "the three-legged stool",
+      "the notice board where jobs arrive"
     ],
     "time_of_day": "always warm late afternoon — keeps lighting consistent across episodes"
   },
@@ -72,38 +104,56 @@
     "consistency_rule": "Every generation prompt must include the cast look block verbatim plus the palette. Character drift across episodes is the single most visible sign of machine production."
   },
   "episode_formula": {
-    "engine": "One friend brings one broken object. Mango notices one specific cause. She fixes it using one named physical principle. The owner is delighted. The principle is stated once, plainly.",
-    "why_it_scales": "The broken object, the cause, the principle and the owner are four independent axes. They generate a very large space of genuinely distinct episodes — unlike a template that swaps only a noun.",
+    "engine": "Someone brings a broken thing. Mango works out the real cause. The cause names a DOMAIN, and the domain names which teammate is needed. A first attempt fails for an honest reason. The right teammate solves it. The principle is named in plain words.",
+    "why_it_scales": "Five domains x objects x causes x who-brings-it is a very large space, and the failed first attempt adds a second independent axis. The team is generative, not decorative: the physics picks the character, so no episode can be a reskin of another.",
     "beats": [
       {
         "n": 1,
-        "name": "arrival",
-        "seconds": 6,
-        "content": "Friend arrives holding the broken thing. We see clearly what is wrong."
+        "name": "cold-open",
+        "seconds": 20,
+        "content": "The thing breaks, on screen, in use. No dialogue needed."
       },
       {
         "n": 2,
-        "name": "notice",
-        "seconds": 7,
-        "content": "Mango turns it over and names the actual cause out loud. Close on the fault."
+        "name": "the-call",
+        "seconds": 25,
+        "content": "It arrives at the den. Whoever is there reacts. Establish stakes: who needs it, and when."
       },
       {
         "n": 3,
-        "name": "fix",
-        "seconds": 14,
-        "content": "The repair, shown as process. Hands, tools, one clear physical principle at work. This is the retention beat — it must be satisfying to watch."
+        "name": "diagnose",
+        "seconds": 35,
+        "content": "Mango turns it over twice and names the actual cause. Close on the fault."
       },
       {
         "n": 4,
-        "name": "test",
-        "seconds": 5,
-        "content": "The object is tested and works. Small, real delight from the owner."
+        "name": "first-try",
+        "seconds": 35,
+        "content": "An obvious fix is tried and honestly fails. No blame, no one is foolish."
       },
       {
         "n": 5,
+        "name": "who-is-needed",
+        "seconds": 25,
+        "content": "The cause names a domain; the domain names a teammate. They arrive in character."
+      },
+      {
+        "n": 6,
+        "name": "the-fix",
+        "seconds": 60,
+        "content": "The real repair, as process. Two characters working together. This is the retention beat."
+      },
+      {
+        "n": 7,
+        "name": "the-test",
+        "seconds": 25,
+        "content": "Tested in the same use that broke it in beat 1. It works."
+      },
+      {
+        "n": 8,
         "name": "name-it",
-        "seconds": 3,
-        "content": "Mango names the principle in one short sentence a 4-year-old can repeat."
+        "seconds": 15,
+        "content": "The principle stated once, plainly, in words a four-year-old can repeat."
       }
     ]
   },
@@ -111,12 +161,14 @@
     "Never a villain, never a character who broke the object on purpose, never blame.",
     "The fix must be physically real. A child watching must not learn something false.",
     "Never depict a repair a child could copy dangerously — no blades, heat, electricity, small swallowable magnets, or climbing.",
+    "The first attempt fails for an honest physical reason, never because a character was careless or silly.",
     "One principle per episode, named in plain words, never jargon.",
-    "No brand names, no real-world product lookalikes.",
-    "Mango never speaks to the camera about subscribing, liking or following."
+    "No brand names, no real-world product lookalikes, no resemblance to any existing kids property.",
+    "Nobody is ever the butt of a joke. Pip is the youngest, never the punchline.",
+    "No character asks the audience to like, subscribe or follow."
   ],
   "dedupe_axes": {
-    "comment": "Every episode must differ from recent ones on these axes. Enforced by pipeline/lib/registry.mjs, not by trusting the model.",
+    "comment": "Enforced by pipeline/lib/registry.mjs, not by trusting the model.",
     "axes": {
       "broken_object": {
         "recency_window": 60,
@@ -126,16 +178,24 @@
         "recency_window": 25,
         "note": "no repeated principle within 25 episodes"
       },
+      "domain": {
+        "recency_window": 4,
+        "note": "rotate which teammate leads the fix"
+      },
       "owner": {
-        "recency_window": 6,
-        "note": "rotate who brings the object"
+        "recency_window": 8,
+        "note": "rotate who brings the job in"
       },
       "cause": {
         "recency_window": 20,
         "note": "the reason it broke must vary"
+      },
+      "failed_attempt": {
+        "recency_window": 15,
+        "note": "the first try that fails must vary"
       }
     },
     "similarity_threshold": 0.62,
-    "similarity_note": "Combined trigram+token similarity against every prior premise. Above this, the episode is rejected and regenerated."
+    "similarity_note": "Combined trigram+token similarity against every prior premise."
   }
 }

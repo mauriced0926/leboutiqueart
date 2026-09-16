@@ -12,7 +12,7 @@
     "ep:generate": "node pipeline/run.mjs",
     "ep:review": "node pipeline/review.mjs",
     "ep:publish": "node pipeline/publish.mjs",
-    "ep:test": "node pipeline/dedupe.test.mjs && node pipeline/generate.test.mjs && node pipeline/media.test.mjs && node pipeline/providers.test.mjs",
+    "ep:test": "node pipeline/dedupe.test.mjs && node pipeline/generate.test.mjs && node pipeline/media.test.mjs && node pipeline/providers.test.mjs && node pipeline/shots.test.mjs",
     "ep:build": "node pipeline/build.mjs",
     "ep:doctor": "node pipeline/doctor.mjs"
   },

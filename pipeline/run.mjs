@@ -37,6 +37,8 @@ const { episode, attempts } = await generateEpisode({ bible, history, client });
 console.log(`\n✓ Episode ${episode.episode}: ${episode.title}`);
 console.log(`  premise:   ${episode.premise}`);
 console.log(`  object:    ${episode.broken_object}  ·  principle: ${episode.fix_principle}`);
+console.log(`  domain:    ${episode.domain}  ·  lead: ${episode.lead_fixer}  ·  first try: ${episode.failed_attempt}`);
+console.log(`  runtime:   ${episode.beats.reduce((t, b) => t + b.seconds, 0)}s across ${episode.beats.length} beats`);
 console.log(`  attempts:  ${attempts.length}${attempts.length > 1 ? ` (${attempts.length - 1} rejected by the novelty gate)` : ''}`);
 for (const a of attempts.filter((x) => x.ok === false)) {
   for (const r of a.reasons ?? []) console.log(`    rejected: ${r}`);
@@ -54,6 +56,7 @@ writeFileSync(join(dir, 'status.json'), JSON.stringify({ state: 'pending_review'
 appendRegistry(paths.registry, {
   episode: episode.episode, premise: episode.premise, broken_object: episode.broken_object,
   fix_principle: episode.fix_principle, owner: episode.owner, cause: episode.cause,
+  domain: episode.domain, failed_attempt: episode.failed_attempt, lead_fixer: episode.lead_fixer,
   title: episode.title, staged_at: episode.generated_at,
 });
 

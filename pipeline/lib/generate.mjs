@@ -18,15 +18,21 @@ const EpisodeSchema = z.object({
   broken_object: z.string().describe('The object being repaired, 1-3 words'),
   cause: z.string().describe('Why it broke, 1-4 words'),
   fix_principle: z.string().describe('The physical principle used, in plain words a child could repeat'),
-  owner: z.string().describe('Which character brings it (bramble, or a named one-off forest friend)'),
+  domain: z.string().describe('Which physical domain the fix belongs to — this picks the teammate'),
+  owner: z.string().describe('Who brings the job in'),
+  lead_fixer: z.string().describe('Which cast member solves it, chosen by the domain'),
+  failed_attempt: z.string().describe('The obvious first fix that honestly fails, in a few words'),
   beats: z.array(z.object({
     n: z.number(),
     name: z.string(),
     seconds: z.number(),
-    visual: z.string().describe('What is on screen — concrete, drawable, no camera jargon'),
-    caption: z.string().describe('On-screen caption for this beat, under 8 words'),
-    narration: z.string().describe("Mango's spoken line for this beat, or empty string for none"),
-  })).describe('Exactly 5 beats matching the series formula'),
+    visual: z.string().describe('What is on screen — concrete and drawable. No camera jargon.'),
+    caption: z.string().describe('On-screen caption for this beat, under 8 words, or empty'),
+    lines: z.array(z.object({
+      speaker: z.string().describe('A cast member key, lowercase, exactly as in the bible'),
+      text: z.string().describe('What they say. Short — roughly 2.5 words per second of beat.'),
+    })).describe('Dialogue for this beat, in order. Empty array for a wordless beat.'),
+  })).describe('Exactly 8 beats matching the series formula, with the formula durations'),
   description: z.string().describe('YouTube description, 2-3 sentences, no hashtag spam'),
   tags: z.array(z.string()).max(12),
 });
@@ -43,7 +49,13 @@ function systemPrompt(bible) {
     JSON.stringify(bible, null, 2),
     '',
     'HARD REQUIREMENTS:',
-    '- Exactly 5 beats, matching the formula names and durations in the bible.',
+    '- Exactly 8 beats, matching the formula names and durations in the bible.',
+    '- Every `speaker` must be a cast key from the bible: mango, bramble, tolly, wren or pip.',
+    '- The domain of the cause must pick the lead_fixer. Do not default to Mango solving everything;',
+    '  she diagnoses, someone else usually fixes.',
+    '- Give each character their own voice on the page — Tolly is slow and low, Wren is fast and',
+    '  chirpy, Pip is tiny and delighted, Bramble worries, Mango is calm. A reader should be able to',
+    '  tell who is speaking without the name.',
     '- The fix must be physically real. A child must not learn something false.',
     '- Obey every entry in hard_rules.',
     '- The fix_principle must be nameable in plain words a four-year-old can repeat.',
@@ -53,7 +65,7 @@ function systemPrompt(bible) {
 
 function userPrompt(episodeNumber, history, rejections) {
   const recent = history.slice(-12).map((h) =>
-    `  ep${h.episode}: ${h.broken_object} — ${h.fix_principle} — "${h.premise}"`);
+    `  ep${h.episode}: ${h.broken_object} — ${h.fix_principle} — ${h.domain ?? '?'} — "${h.premise}"`);
 
   const parts = [
     `Write episode ${episodeNumber}.`,
