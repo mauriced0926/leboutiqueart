@@ -121,7 +121,11 @@ if (!stitchOnly) {
       const r = await renderShot({ shot, bible: { ...bible, __sheetPath: SHEET }, outputPath: out,
         framePath: join(clipDir, `${shot.id}.png`), env, episodeCast, anchorFrame,
         prop: episode.broken_object,
-        onProgress: (p) => { if (p.phase === 'frame') process.stdout.write('frame… '); if (p.phase === 'animate') process.stdout.write('animate… '); } });
+        onProgress: (p) => {
+          if (p.phase === 'frame') process.stdout.write('frame… ');
+          if (p.phase === 'animate') process.stdout.write('animate… ');
+          if (p.phase === 'ratelimit') process.stdout.write(`rate-limited, waiting ${Math.round(p.waitMs / 1000)}s… `);
+        } });
       spent += r.cost;
       anchorFrame ??= r.frame;   // first good frame anchors the rest of the episode
       console.log(`✓ ${r.tier} · ${Math.round((Date.now() - started) / 1000)}s · $${r.cost.toFixed(2)}`);

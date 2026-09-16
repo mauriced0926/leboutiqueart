@@ -206,7 +206,7 @@ function absentCastNegatives(shot, cast, episodeCast = null) {
 }
 
 /** Start a generation. Returns the long-running operation name. */
-async function startShot({ prompt, seconds, referenceImage, tier, key, negativePrompt = SAFETY_NEGATIVE }) {
+async function startShot({ prompt, seconds, referenceImage, tier, key, negativePrompt = SAFETY_NEGATIVE, onRateLimit }) {
   const t = TIERS[tier];
   if (!t) throw new Error(`Unknown Veo tier "${tier}". Use: ${Object.keys(TIERS).join(', ')}`);
   if (seconds < MIN_SECONDS || seconds > MAX_SECONDS) {
@@ -218,26 +218,41 @@ async function startShot({ prompt, seconds, referenceImage, tier, key, negativeP
     instance.image = { bytesBase64Encoded: readFileSync(referenceImage).toString('base64'), mimeType: 'image/png' };
   }
 
-  const res = await fetch(`${BASE}/models/${t.model}:predictLongRunning?key=${key}`, {
-    method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      instances: [instance],
-      parameters: {
-        aspectRatio: '9:16',
-        durationSeconds: seconds,
-        resolution: '1080p',
-        negativePrompt,
-        sampleCount: 1,
-      },
-    }),
+  const body = JSON.stringify({
+    instances: [instance],
+    parameters: {
+      aspectRatio: '9:16',
+      durationSeconds: seconds,
+      resolution: '1080p',
+      negativePrompt,
+      sampleCount: 1,
+    },
   });
-  const text = await res.text();
-  if (!res.ok) {
+
+  // 429 here is a per-minute rate limit, not exhausted credit — the same key succeeds a
+  // moment later. Without backoff a single transient 429 aborted a 34-shot render on its
+  // first clip. Waits are long because the limit is per minute, not per second.
+  const backoffMs = [30_000, 60_000, 120_000, 240_000];
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(`${BASE}/models/${t.model}:predictLongRunning?key=${key}`, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body,
+    });
+    const text = await res.text();
+    if (res.ok) return JSON.parse(text).name;
+
     let m = text.slice(0, 300);
     try { m = JSON.parse(text).error.message; } catch {}
-    throw new Error(`Veo start failed (${res.status}): ${String(m).replaceAll(key, '[KEY]')}`);
+
+    const retryable = res.status === 429 || res.status >= 500;
+    if (!retryable || attempt >= backoffMs.length) {
+      const hint = res.status === 429
+        ? ' — rate limited and still failing after backoff; if this persists, credits may actually be out (check ai.dev/rate-limit)'
+        : '';
+      throw new Error(`Veo start failed (${res.status}): ${String(m).replaceAll(key, '[KEY]')}${hint}`);
+    }
+    onRateLimit?.({ attempt: attempt + 1, waitMs: backoffMs[attempt] });
+    await new Promise((r) => setTimeout(r, backoffMs[attempt]));
   }
-  return JSON.parse(text).name;
 }
 
 async function awaitShot({ operation, key, timeoutMs = 10 * 60_000, pollMs = 10_000 }) {
@@ -304,6 +319,7 @@ export async function renderShot({ shot, bible, outputPath, framePath, env = pro
   const operation = await startShot({
     prompt: buildAnimationPrompt({ shot, bible, cast: bible.cast, prop }),
     seconds: shot.seconds, referenceImage: frame, tier: chosen, key, negativePrompt: negatives,
+    onRateLimit: (i) => onProgress?.({ phase: 'ratelimit', shot: shot.id, ...i }),
   });
   const done = await awaitShot({ operation, key });
   const path = await saveVideo({ done, outputPath, key });
