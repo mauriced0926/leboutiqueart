@@ -117,37 +117,37 @@
       {
         "n": 1,
         "name": "cold-open",
-        "seconds": 20,
+        "seconds": 24,
         "content": "The friend, out in the world, doing the ordinary thing. It goes wrong on screen. Little or no dialogue — we SEE what happened."
       },
       {
         "n": 2,
         "name": "arrival",
-        "seconds": 26,
+        "seconds": 24,
         "content": "Friend arrives at the den: 'Hi Mango! I was [activity] with [object], and now it won't [do the thing].' Mango welcomes them, unhurried."
       },
       {
         "n": 3,
         "name": "what-happened",
-        "seconds": 26,
+        "seconds": 24,
         "content": "Mango asks one or two plain questions. The friend offers their own guess — 'maybe because we [wrong guess]' — which is reasonable and wrong."
       },
       {
         "n": 4,
         "name": "look-closer",
-        "seconds": 34,
+        "seconds": 32,
         "content": "Mango turns it over twice and finds the real cause. Close on the fault itself, large in frame — we SEE what is wrong, not Mango's face while she describes it. She rules out the friend's guess kindly."
       },
       {
         "n": 5,
         "name": "the-advice",
-        "seconds": 26,
+        "seconds": 24,
         "content": "Mango explains the idea in plain words BEFORE touching the repair — and SHOWS it while she says it. She holds the actual parts up so the thing she describes is visible: if she says a wheel spins on a stick, we see the wheel and the stick and the gap between them. Never a character gesturing at an idea we cannot see."
       },
       {
         "n": 6,
         "name": "fix-together",
-        "seconds": 60,
+        "seconds": 64,
         "content": "They mend it together. The friend does a real part of the work with Mango guiding. This is the retention beat."
       },
       {
@@ -163,7 +163,7 @@
         "content": "Mango names the principle in one short sentence. The friend repeats it back in their own words."
       }
     ],
-    "shot_constraint": "Veo renders 6 or 8 second clips at 1080p (4s is rejected at that resolution). Beat durations must therefore be even and composable from 6s and 8s: at least 12s, and not 10s."
+    "shot_constraint": "Every clip is 8 seconds, rendered on the Veo fast tier at 1080p — the one duration/tier/resolution combination proven to render. Beat durations must therefore be exact multiples of 8s."
   },
   "hard_rules": [
     "Mango is in every episode from beat 2 onward and is always the one who works out why. Never sideline her.",

@@ -11,7 +11,7 @@ export const MAX_SHOT_SECONDS = 8;
 // Veo's hard floor: durationSeconds must be between 4 and 8 inclusive (verified against
 // the live API). A shorter shot is rejected outright, which mid-render means paying for
 // every clip generated before the failure. Shots below this borrow from the longest shot.
-export const MIN_SHOT_SECONDS = 6;
+export const MIN_SHOT_SECONDS = 8;
 
 /** Rough speaking time. 2.5 words/sec is the rate the script prompt writes to. */
 export function speakSeconds(text) {
@@ -31,11 +31,20 @@ export function speakSeconds(text) {
  * which is wrong in a costly way: 5 and 7 are rejected, as is any fractional value.
  * Verified by probing each value against the live endpoint.
  */
-// Veo accepts 4, 6 and 8 second clips, but rejects 1080p at 4 seconds ("1080p is not
-// supported for a duration of 4 seconds"). Rather than mix resolutions within an episode,
-// 4s is dropped entirely so every clip can render at 1080p. Every even duration of 12s or
-// more composes from 6 and 8 alone, and the shortest beat in the formula is 16s.
-export const ALLOWED_SECONDS = [6, 8];
+/**
+ * Eight seconds, and only eight seconds.
+ *
+ * Veo's duration / resolution / tier rules interact in ways its errors describe one case at
+ * a time: 1080p is rejected at 4s and at 6s, the lite tier has no audio and refuses
+ * negativePrompt, and three separate attempts to map the matrix by probing were defeated by
+ * validation order. Fast + 8s + 1080p is the one combination proven to render, so the
+ * planner emits only that and the whole matrix stops mattering.
+ *
+ * The cost is that beat durations must be multiples of 8, and about $5.50 more per episode
+ * than mixing in cheaper lite clips. That is worth paying to delete a class of failure that
+ * has now aborted three renders.
+ */
+export const ALLOWED_SECONDS = [8];
 
 /**
  * Split `total` seconds into exactly `count` clips drawn from ALLOWED_SECONDS.
@@ -43,16 +52,8 @@ export const ALLOWED_SECONDS = [6, 8];
  * be composed, and a beat must satisfy 4*count <= total <= 8*count.
  */
 export function composeDurations(total, count) {
-  if (count < 1 || total % 2 !== 0) return null;
-  if (total < 6 * count || total > 8 * count) return null;
-  const parts = Array(count).fill(6);
-  let remaining = total - 6 * count;         // always even
-  for (let i = 0; i < count && remaining > 0; i++) {
-    const add = Math.min(2, remaining);      // 6 -> 8
-    parts[i] += add;
-    remaining -= add;
-  }
-  return remaining === 0 ? parts.sort((a, b) => b - a) : null;
+  if (count < 1 || total !== 8 * count) return null;
+  return Array(count).fill(8);
 }
 
 /** How many clips a beat needs so no shot's dialogue overruns 8 seconds. */
@@ -79,8 +80,16 @@ export function planBeatShots(beat, max = MAX_SHOT_SECONDS) {
   const lines = beat.lines ?? [];
   const total = beat.seconds;
 
-  const minCount = Math.ceil(total / 8);
-  const maxCount = Math.floor(total / 6);
+  // Guard before any arithmetic: a non-multiple of 8 yields a fractional clip count, and
+  // Array(2.5) throws an opaque "Invalid array length" instead of saying what is wrong.
+  if (total % 8 !== 0) {
+    throw new Error(
+      `Beat ${beat.n} is ${total}s, which is not a multiple of 8s. ` +
+      'Every clip is 8 seconds — see episode_formula.shot_constraint in the bible.'
+    );
+  }
+  const minCount = total / 8;
+  const maxCount = total / 8;
   const wanted = shotsNeededFor(lines, max) ?? minCount;
   // Clamp to what the beat's duration can actually be composed into.
   let count = Math.min(Math.max(wanted, minCount), Math.max(minCount, maxCount));
@@ -91,7 +100,7 @@ export function planBeatShots(beat, max = MAX_SHOT_SECONDS) {
   if (!durations) {
     throw new Error(
       `Beat ${beat.n} is ${total}s, which cannot be composed from ${ALLOWED_SECONDS.join('/')}s clips. ` +
-      'Beat durations must be even and at least 6s (and not 10s) — see episode_formula.shot_constraint.'
+      'Beat durations must be exact multiples of 8s — see episode_formula.shot_constraint.'
     );
   }
   count = durations.length;

@@ -300,7 +300,9 @@ export async function renderShot({ shot, bible, outputPath, framePath, env = pro
   const key = env.GEMINI_API_KEY;
   if (!key) throw new Error('GEMINI_API_KEY is not set in .env.local.');
 
-  const chosen = tier ?? (shot.lines.length ? (env.VEO_TIER ?? 'fast') : 'lite');
+  // Always fast: lite cannot do audio, rejects negativePrompt, and will not render 1080p
+  // below 8s. The saving was not worth three aborted renders.
+  const chosen = tier ?? env.VEO_TIER ?? 'fast';
   if (shot.lines.length && !TIERS[chosen].audio) {
     throw new Error(`Shot ${shot.id} has dialogue but tier "${chosen}" cannot generate audio. Use fast or standard.`);
   }
@@ -333,7 +335,7 @@ export async function renderShot({ shot, bible, outputPath, framePath, env = pro
 }
 
 /** What an episode's shot list will cost, by tier. */
-export function estimateCost(shots, { dialogueTier = 'fast', silentTier = 'lite' } = {}) {
+export function estimateCost(shots, { dialogueTier = 'fast', silentTier = 'fast' } = {}) {
   let total = 0;
   const byTier = {};
   for (const s of shots) {
