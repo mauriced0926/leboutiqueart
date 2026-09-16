@@ -15,10 +15,12 @@ import { generateImage } from './media.mjs';
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
+// The lite tier has a reduced parameter set: no audio, and it rejects negativePrompt
+// outright. Both verified against the live API, neither obvious from the model listing.
 export const TIERS = {
-  fast:     { model: 'veo-3.1-fast-generate-preview',  usdPerSecond: 0.12, audio: true },
-  lite:     { model: 'veo-3.1-lite-generate-preview',  usdPerSecond: 0.03, audio: false },
-  standard: { model: 'veo-3.1-generate-preview',       usdPerSecond: 0.75, audio: true },
+  fast:     { model: 'veo-3.1-fast-generate-preview',  usdPerSecond: 0.12, audio: true,  negativePrompt: true },
+  lite:     { model: 'veo-3.1-lite-generate-preview',  usdPerSecond: 0.03, audio: false, negativePrompt: false },
+  standard: { model: 'veo-3.1-generate-preview',       usdPerSecond: 0.75, audio: true,  negativePrompt: true },
 };
 
 export const MIN_SECONDS = 4;
@@ -224,7 +226,10 @@ async function startShot({ prompt, seconds, referenceImage, tier, key, negativeP
       aspectRatio: '9:16',
       durationSeconds: seconds,
       resolution: '1080p',
-      negativePrompt,
+      // Only tiers that accept it. Safety still holds without it here: a lite shot is
+      // wordless, and its first frame was composed by the image model under the full
+      // hard-rules prompt — Veo is only animating an already-vetted picture.
+      ...(t.negativePrompt ? { negativePrompt } : {}),
       sampleCount: 1,
     },
   });
