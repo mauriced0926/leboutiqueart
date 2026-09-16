@@ -106,7 +106,7 @@ export function charactersInShot(shot, cast, episodeCast = null) {
   return [...speakers];
 }
 
-export function buildFramePrompt({ shot, bible, cast, episodeCast = null, anchorFrame = null }) {
+export function buildFramePrompt({ shot, bible, cast, episodeCast = null, anchorFrame = null, prop = null }) {
   const present = charactersInShot(shot, cast, episodeCast);
   // Exclude only cast who are not in this EPISODE. Excluding everyone who is not speaking
   // in this shot wrongly banished the visitor, who stands in the den for the whole scene.
@@ -131,6 +131,14 @@ export function buildFramePrompt({ shot, bible, cast, episodeCast = null, anchor
       'A second reference image is the PREVIOUS SHOT of this same scene. Match its palette,',
       'lighting, line weight, rendering density and the characters exactly — these shots cut',
       'together, so they must look like the same film.');
+  }
+  if (prop) {
+    // The cart vanished between two shots of the same conversation. The broken object is
+    // what the episode is about, so it is a required element of the frame, not set dressing.
+    parts.push('',
+      `THE BROKEN OBJECT — the ${prop} must be clearly visible in this shot, in the same`,
+      'place and the same state as the reference frame. It is what the scene is about and',
+      'must never be absent, moved off-screen, or swapped for a different object.');
   }
   const counts = statedCounts(shot.lines);
   if (counts.length) {
@@ -170,11 +178,17 @@ function safetyBlock(bible) {
 }
 
 /** Prompt for ANIMATING an already-composed frame. Veo must not reinvent the picture. */
-export function buildAnimationPrompt({ shot, bible, cast }) {
+export function buildAnimationPrompt({ shot, bible, cast, prop = null }) {
   const parts = [
     'Animate this exact illustration. Keep the art style, colours, composition and every',
     'character precisely as shown. Do not restyle it, do not add or replace any character.',
     'Gentle, unhurried children\'s animation. Subtle motion. Locked-off camera.',
+    '',
+    // Veo animated the cart out of frame partway through an 8s clip.
+    'NOTHING IN THE SCENE MAY DISAPPEAR, morph into something else, or leave the frame.',
+    'Every object and character visible at the start is still there, in the same place, at',
+    'the end. Only the characters move.',
+    ...(prop ? [`The ${prop} stays clearly visible and unchanged for the whole clip.`] : []),
     '',
     `ACTION: ${shot.visual}`,
   ];
@@ -262,7 +276,7 @@ async function saveVideo({ done, outputPath, key }) {
  * `framePath` is cached separately from the clip, so re-rendering an animation does not
  * re-bill the frame, and a frame you have approved by eye is reused verbatim.
  */
-export async function renderShot({ shot, bible, outputPath, framePath, env = process.env, tier, onProgress, episodeCast = null, anchorFrame = null }) {
+export async function renderShot({ shot, bible, outputPath, framePath, env = process.env, tier, onProgress, episodeCast = null, anchorFrame = null, prop = null }) {
   const key = env.GEMINI_API_KEY;
   if (!key) throw new Error('GEMINI_API_KEY is not set in .env.local.');
 
@@ -275,7 +289,7 @@ export async function renderShot({ shot, bible, outputPath, framePath, env = pro
   if (!existsSync(frame)) {
     onProgress?.({ phase: 'frame', shot: shot.id });
     await generateImage({
-      prompt: buildFramePrompt({ shot, bible, cast: bible.cast, episodeCast, anchorFrame }),
+      prompt: buildFramePrompt({ shot, bible, cast: bible.cast, episodeCast, anchorFrame, prop }),
       stylePrompt: styleBlock(bible),
       // The sheet fixes WHO; the previous frame fixes HOW IT LOOKS. Without the anchor,
       // consecutive frames came back in different palettes and framing and would not cut.
@@ -288,7 +302,7 @@ export async function renderShot({ shot, bible, outputPath, framePath, env = pro
   onProgress?.({ phase: 'animate', shot: shot.id, tier: chosen });
   const negatives = [SAFETY_NEGATIVE, ...absentCastNegatives(shot, bible.cast, episodeCast), 'extra characters', 'restyle'].join(', ');
   const operation = await startShot({
-    prompt: buildAnimationPrompt({ shot, bible, cast: bible.cast }),
+    prompt: buildAnimationPrompt({ shot, bible, cast: bible.cast, prop }),
     seconds: shot.seconds, referenceImage: frame, tier: chosen, key, negativePrompt: negatives,
   });
   const done = await awaitShot({ operation, key });
