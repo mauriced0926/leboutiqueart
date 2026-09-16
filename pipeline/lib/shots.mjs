@@ -11,7 +11,7 @@ export const MAX_SHOT_SECONDS = 8;
 // Veo's hard floor: durationSeconds must be between 4 and 8 inclusive (verified against
 // the live API). A shorter shot is rejected outright, which mid-render means paying for
 // every clip generated before the failure. Shots below this borrow from the longest shot.
-export const MIN_SHOT_SECONDS = 4;
+export const MIN_SHOT_SECONDS = 6;
 
 /** Rough speaking time. 2.5 words/sec is the rate the script prompt writes to. */
 export function speakSeconds(text) {
@@ -31,7 +31,11 @@ export function speakSeconds(text) {
  * which is wrong in a costly way: 5 and 7 are rejected, as is any fractional value.
  * Verified by probing each value against the live endpoint.
  */
-export const ALLOWED_SECONDS = [4, 6, 8];
+// Veo accepts 4, 6 and 8 second clips, but rejects 1080p at 4 seconds ("1080p is not
+// supported for a duration of 4 seconds"). Rather than mix resolutions within an episode,
+// 4s is dropped entirely so every clip can render at 1080p. Every even duration of 12s or
+// more composes from 6 and 8 alone, and the shortest beat in the formula is 16s.
+export const ALLOWED_SECONDS = [6, 8];
 
 /**
  * Split `total` seconds into exactly `count` clips drawn from ALLOWED_SECONDS.
@@ -40,11 +44,11 @@ export const ALLOWED_SECONDS = [4, 6, 8];
  */
 export function composeDurations(total, count) {
   if (count < 1 || total % 2 !== 0) return null;
-  if (total < 4 * count || total > 8 * count) return null;
-  const parts = Array(count).fill(4);
-  let remaining = total - 4 * count;         // always even
+  if (total < 6 * count || total > 8 * count) return null;
+  const parts = Array(count).fill(6);
+  let remaining = total - 6 * count;         // always even
   for (let i = 0; i < count && remaining > 0; i++) {
-    const add = Math.min(4, remaining);      // 4 -> 6 (+2) or 4 -> 8 (+4)
+    const add = Math.min(2, remaining);      // 6 -> 8
     parts[i] += add;
     remaining -= add;
   }
@@ -76,7 +80,7 @@ export function planBeatShots(beat, max = MAX_SHOT_SECONDS) {
   const total = beat.seconds;
 
   const minCount = Math.ceil(total / 8);
-  const maxCount = Math.floor(total / 4);
+  const maxCount = Math.floor(total / 6);
   const wanted = shotsNeededFor(lines, max) ?? minCount;
   // Clamp to what the beat's duration can actually be composed into.
   let count = Math.min(Math.max(wanted, minCount), Math.max(minCount, maxCount));
@@ -87,7 +91,7 @@ export function planBeatShots(beat, max = MAX_SHOT_SECONDS) {
   if (!durations) {
     throw new Error(
       `Beat ${beat.n} is ${total}s, which cannot be composed from ${ALLOWED_SECONDS.join('/')}s clips. ` +
-      'Beat durations must be even and at least 4s — see episode_formula.shot_constraint in the bible.'
+      'Beat durations must be even and at least 6s (and not 10s) — see episode_formula.shot_constraint.'
     );
   }
   count = durations.length;

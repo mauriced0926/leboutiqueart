@@ -163,7 +163,7 @@
         "content": "Mango names the principle in one short sentence. The friend repeats it back in their own words."
       }
     ],
-    "shot_constraint": "Veo renders only 4, 6 or 8 second clips. Beat durations must be even and at least 4s."
+    "shot_constraint": "Veo renders 6 or 8 second clips at 1080p (4s is rejected at that resolution). Beat durations must therefore be even and composable from 6s and 8s: at least 12s, and not 10s."
   },
   "hard_rules": [
     "Mango is in every episode from beat 2 onward and is always the one who works out why. Never sideline her.",

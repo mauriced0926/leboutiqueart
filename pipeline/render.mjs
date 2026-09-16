@@ -155,6 +155,7 @@ process.stdout.write('\n  stitching… ');
 // Re-encode rather than stream-copy: Veo clips can differ in SPS/PPS and a copy concat
 // then produces a file that plays only the first clip on some players.
 await exec(ffmpeg, ['-f', 'concat', '-safe', '0', '-i', listFile,
+  '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1',
   '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p',
   '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-y', outPath], { maxBuffer: 64 * 1024 * 1024 });
 console.log(`✓ ${outPath}\n`);

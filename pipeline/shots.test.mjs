@@ -18,7 +18,8 @@ test('a wordless beat uses the fewest clips that compose it', () => {
   const shots = planBeatShots({ n: 1, seconds: 20, lines: [], visual: 'v' });
   assert.equal(total(shots), 20);
   assert.ok(shots.every((s) => ALLOWED_SECONDS.includes(s.seconds)));
-  assert.equal(shots.length, 3, '20s should be 8+8+4, not more cuts than needed');
+  assert.equal(shots.reduce((t, x) => t + x.seconds, 0), 20);
+  assert.ok(shots.length === 3, '20s should be 8+6+6');
 });
 test('preserves the beat duration exactly', () => {
   const shots = planBeatShots({ n: 2, seconds: 36, visual: 'v', lines: [line('a', 12), line('b', 10), line('c', 14), line('d', 8)] });
@@ -68,18 +69,23 @@ test('every shot is exactly 4, 6 or 8 seconds', () => {
 
 test('an odd beat duration fails loudly rather than rendering wrong', () => {
   assert.throws(() => planBeatShots({ n: 1, seconds: 25, visual: 'v', lines: [] }),
-    /cannot be composed from 4\/6\/8s clips/);
+    /cannot be composed from 6\/8s clips/);
 });
 
 console.log('\ncomposeDurations');
 test('composes an even total exactly', () => {
-  assert.deepEqual(composeDurations(26, 4), [8, 8, 6, 4]);
+  assert.deepEqual(composeDurations(26, 4), [8, 6, 6, 6]);
   assert.equal(composeDurations(60, 8).reduce((a, b) => a + b, 0), 60);
 });
 test('refuses an odd total', () => assert.equal(composeDurations(25, 4), null));
 test('refuses a count that cannot reach the total', () => {
   assert.equal(composeDurations(60, 2), null);  // max 16s from 2 clips
-  assert.equal(composeDurations(8, 4), null);   // min 16s from 4 clips
+  assert.equal(composeDurations(8, 4), null);   // min 24s from 4 clips
+});
+test('refuses 10s, which 6 and 8 cannot compose', () => {
+  // The one gap above the minimum: 10 is even but unreachable from {6,8}.
+  assert.equal(composeDurations(10, 1), null);
+  assert.equal(composeDurations(10, 2), null);
 });
 
 console.log('\nplanEpisodeShots');
