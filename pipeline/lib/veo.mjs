@@ -100,9 +100,12 @@ export function charactersInShot(shot, cast) {
   return Object.keys(cast).filter((k) => new RegExp(`\\b${k}\\b`).test(text));
 }
 
-export function buildFramePrompt({ shot, bible, cast }) {
+export function buildFramePrompt({ shot, bible, cast, episodeCast = null, anchorFrame = null }) {
   const present = charactersInShot(shot, cast);
-  const absent = Object.keys(cast).filter((k) => !present.includes(k));
+  // Exclude only cast who are not in this EPISODE. Excluding everyone who is not speaking
+  // in this shot wrongly banished the visitor, who stands in the den for the whole scene.
+  const inEpisode = episodeCast ?? Object.keys(cast);
+  const absent = Object.keys(cast).filter((k) => !inEpisode.includes(k));
   const parts = [
     `Scene from "${bible.series.title}". Setting: ${bible.world.setting}.`,
     '',
@@ -116,6 +119,12 @@ export function buildFramePrompt({ shot, bible, cast }) {
   if (absent.length) {
     // Naming who is absent matters: the renderer otherwise drifts extra cast into frame.
     parts.push('', `NOT in this shot — none of these may appear: ${absent.join(', ')}.`);
+  }
+  if (anchorFrame) {
+    parts.push('',
+      'A second reference image is the PREVIOUS SHOT of this same scene. Match its palette,',
+      'lighting, line weight, rendering density and the characters exactly — these shots cut',
+      'together, so they must look like the same film.');
   }
   const counts = statedCounts(shot.lines);
   if (counts.length) {
@@ -134,6 +143,10 @@ export function styleBlock(bible) {
     `Palette (use only these): ${v.palette.join(', ')}.`,
     `Lighting: ${bible.world.time_of_day}. Framing: ${v.camera}. Vertical ${v.aspect}.`,
     'No text, no letters, no watermarks, no signature anywhere in the image.',
+    // A frame came back matted inside a white paper margin, which would read as a glitch
+    // once cut between full-bleed shots.
+    'The artwork fills the entire frame edge to edge: no border, no margin, no mat, no',
+    'vignette, no page edge, no drop shadow around the image.',
     "Mango's folded ear tip is always her LEFT ear; her muzzle stays short and rounded.",
   ].join('\n');
 }
@@ -240,7 +253,7 @@ async function saveVideo({ done, outputPath, key }) {
  * `framePath` is cached separately from the clip, so re-rendering an animation does not
  * re-bill the frame, and a frame you have approved by eye is reused verbatim.
  */
-export async function renderShot({ shot, bible, outputPath, framePath, env = process.env, tier, onProgress }) {
+export async function renderShot({ shot, bible, outputPath, framePath, env = process.env, tier, onProgress, episodeCast = null, anchorFrame = null }) {
   const key = env.GEMINI_API_KEY;
   if (!key) throw new Error('GEMINI_API_KEY is not set in .env.local.');
 
@@ -253,9 +266,11 @@ export async function renderShot({ shot, bible, outputPath, framePath, env = pro
   if (!existsSync(frame)) {
     onProgress?.({ phase: 'frame', shot: shot.id });
     await generateImage({
-      prompt: buildFramePrompt({ shot, bible, cast: bible.cast }),
+      prompt: buildFramePrompt({ shot, bible, cast: bible.cast, episodeCast, anchorFrame }),
       stylePrompt: styleBlock(bible),
-      referenceImages: [bible.__sheetPath].filter(Boolean),
+      // The sheet fixes WHO; the previous frame fixes HOW IT LOOKS. Without the anchor,
+      // consecutive frames came back in different palettes and framing and would not cut.
+      referenceImages: [bible.__sheetPath, anchorFrame].filter((f) => f && existsSync(f)),
       outputPath: frame,
       env,
     });

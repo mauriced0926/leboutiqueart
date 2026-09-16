@@ -107,6 +107,10 @@ if (dry) {
   process.exit(0);
 }
 
+// Cast actually in this episode: Mango plus the visitor. Everyone else is excluded by name.
+const episodeCast = [...new Set(['mango', episode.visitor].filter(Boolean))];
+let anchorFrame = null;
+
 let spent = 0;
 if (!stitchOnly) {
   for (const shot of pending) {
@@ -115,9 +119,10 @@ if (!stitchOnly) {
     const started = Date.now();
     try {
       const r = await renderShot({ shot, bible: { ...bible, __sheetPath: SHEET }, outputPath: out,
-        framePath: join(clipDir, `${shot.id}.png`), env,
+        framePath: join(clipDir, `${shot.id}.png`), env, episodeCast, anchorFrame,
         onProgress: (p) => { if (p.phase === 'frame') process.stdout.write('frame… '); if (p.phase === 'animate') process.stdout.write('animate… '); } });
       spent += r.cost;
+      anchorFrame ??= r.frame;   // first good frame anchors the rest of the episode
       console.log(`✓ ${r.tier} · ${Math.round((Date.now() - started) / 1000)}s · $${r.cost.toFixed(2)}`);
     } catch (e) {
       console.log('✗');
