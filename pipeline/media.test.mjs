@@ -19,6 +19,22 @@ test('one input per beat plus the audio track', () => {
 test('holds each still for its beat duration', () => {
   assert.equal(args[args.indexOf('-t') + 1], '6');
 });
+test('pins the input framerate ahead of -loop', () => {
+  // A looped image input defaults to 25fps; without this the beats ran ~5% long.
+  const i = args.indexOf('-framerate');
+  assert.equal(args[i + 1], '30');
+  assert.equal(args[i + 2], '-loop', '-framerate must precede -loop/-i to apply to that input');
+});
+test('zoompan emits one frame per input frame', () => {
+  // Any d other than 1 multiplies the beat's length instead of carrying the zoom.
+  const fc = args[args.indexOf('-filter_complex') + 1];
+  assert.ok(/zoompan=[^[]*:d=1:/.test(fc), fc);
+});
+test('each beat is trimmed to its exact duration', () => {
+  const fc = args[args.indexOf('-filter_complex') + 1];
+  assert.ok(fc.includes('trim=duration=6'), fc);
+  assert.ok(fc.includes('trim=duration=7'), fc);
+});
 test('concatenates exactly the beat count', () => {
   const fc = args[args.indexOf('-filter_complex') + 1];
   assert.ok(fc.includes('concat=n=2'), fc);

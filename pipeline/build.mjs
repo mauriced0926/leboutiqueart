@@ -141,13 +141,14 @@ async function buildEpisode(dir) {
   const voice = env.MEDIA_TTS_VOICE;
   const fitted = [];
   for (const b of beats) {
-    const fittedPath = join(work, `audio-${b.n}.mp3`);
+    const fittedPath = join(work, `audio-${b.n}.wav`);
     if (!existsSync(fittedPath)) {
       let rawPath = null;
       if (b.narration?.trim()) {
         process.stdout.write(`  beat ${b.n} voice… `);
-        rawPath = join(work, `raw-${b.n}.mp3`);
-        await generateVoiceover({ text: b.narration, voiceName: voice, outputPath: rawPath, env });
+        // Use the RETURNED path: adapters rewrite the extension to match the real format
+        // (Gemini returns PCM, so it writes .wav whatever we ask for).
+        rawPath = await generateVoiceover({ text: b.narration, voiceName: voice, outputPath: join(work, `raw-${b.n}.mp3`), env });
         console.log('✓');
       }
       await fitAudio({ inputPath: rawPath, seconds: b.seconds, outputPath: fittedPath });
@@ -155,7 +156,7 @@ async function buildEpisode(dir) {
     fitted.push(fittedPath);
   }
 
-  const audioPath = join(work, 'narration.mp3');
+  const audioPath = join(work, 'narration.wav');
   await concatAudio({ inputPaths: fitted, outputPath: audioPath, workDir: work });
 
   // 3. Assemble.

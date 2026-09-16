@@ -17,9 +17,45 @@ import { dirname, join } from 'node:path';
 
 const exec = promisify(execFile);
 
+/**
+ * Resolve an ffmpeg binary, in order of preference:
+ *   1. FFMPEG_PATH, if you want to pin a specific build
+ *   2. `ffmpeg` on PATH — a normal system install
+ *   3. the binary bundled by @ffmpeg-installer/ffmpeg, if that package is present
+ *
+ * (3) exists so the pipeline runs on a machine without a system ffmpeg: the package ships
+ * platform binaries inside the npm tarball, so `npm install` is the whole install.
+ * Resolved once and cached — this is called per beat.
+ */
+let ffmpegPath;
+export async function resolveFfmpeg(env = process.env) {
+  if (ffmpegPath !== undefined) return ffmpegPath;
+
+  const candidates = [];
+  if (env.FFMPEG_PATH) candidates.push(env.FFMPEG_PATH);
+  candidates.push('ffmpeg');
+  try {
+    const mod = await import('@ffmpeg-installer/ffmpeg');
+    if (mod?.default?.path) candidates.push(mod.default.path);
+  } catch { /* package not installed — fine, it is optional */ }
+
+  for (const candidate of candidates) {
+    try { await exec(candidate, ['-version']); ffmpegPath = candidate; return ffmpegPath; }
+    catch { /* try the next one */ }
+  }
+  ffmpegPath = null;
+  return null;
+}
+
 export async function ffmpegAvailable() {
-  try { await exec('ffmpeg', ['-version']); return true; }
-  catch { return false; }
+  return (await resolveFfmpeg()) !== null;
+}
+
+/** Run ffmpeg with whichever binary resolved. */
+async function runFfmpeg(args, opts = {}) {
+  const bin = await resolveFfmpeg();
+  if (!bin) throw new Error('ffmpeg not found — see the install note in pipeline/README.md.');
+  return exec(bin, args, { maxBuffer: 64 * 1024 * 1024, ...opts });
 }
 
 /**
@@ -40,15 +76,22 @@ export function buildFfmpegArgs({ beats, audioPath, outputPath, width = 1080, he
   }
 
   const args = [];
-  for (const b of beats) args.push('-loop', '1', '-t', String(b.seconds), '-i', b.imagePath);
+  for (const b of beats) {
+    // -framerate MUST come before -loop/-i: a looped image input defaults to 25fps, so
+    // asking zoompan for 30fps output stretched every beat and the episode ran ~5% long.
+    args.push('-framerate', String(fps), '-loop', '1', '-t', String(b.seconds), '-i', b.imagePath);
+  }
   args.push('-i', audioPath);
 
   // Per-beat: scale/crop to vertical, apply a 4% push-in over the beat, pad to exact size.
   const filters = beats.map((b, i) => {
+    // d=1 emits one output frame per input frame, so duration is carried by -t alone and
+    // the zoom accumulates across frames. Any other d multiplies the beat's length.
     const frames = Math.max(1, Math.round(b.seconds * fps));
+    const step = 0.04 / frames; // reach a 4% push-in exactly at the end of the beat
     return `[${i}:v]scale=${width * 1.1}:-1,` +
-      `zoompan=z='min(zoom+0.0005,1.04)':d=${frames}:s=${width}x${height}:fps=${fps},` +
-      `setsar=1[v${i}]`;
+      `zoompan=z='min(zoom+${step.toFixed(6)},1.04)':d=1:s=${width}x${height}:fps=${fps},` +
+      `trim=duration=${b.seconds},setpts=PTS-STARTPTS,setsar=1[v${i}]`;
   });
   const concatIn = beats.map((_, i) => `[v${i}]`).join('');
   filters.push(`${concatIn}concat=n=${beats.length}:v=1:a=0[vout]`);
@@ -70,13 +113,14 @@ export async function assemble(opts) {
   if (!(await ffmpegAvailable())) {
     throw new Error(
       'ffmpeg is not installed.\n' +
-      '  macOS:  brew install ffmpeg\n' +
-      '  Debian: sudo apt-get install ffmpeg\n' +
-      '  Windows: winget install Gyan.FFmpeg'
+      '  macOS:   brew install ffmpeg\n' +
+      '  Debian:  sudo apt-get install ffmpeg\n' +
+      '  Windows: winget install Gyan.FFmpeg\n' +
+      '  Or, with no system install at all:  npm install @ffmpeg-installer/ffmpeg'
     );
   }
   const args = buildFfmpegArgs(opts);
-  await exec('ffmpeg', args, { maxBuffer: 64 * 1024 * 1024 });
+  await runFfmpeg(args);
   if (!existsSync(opts.outputPath)) throw new Error('ffmpeg reported success but produced no file.');
   return opts.outputPath;
 }
@@ -353,17 +397,23 @@ async function openaiImage({ prompt, stylePrompt, outputPath, env }) {
  * the episode ends mid-sentence.
  */
 export async function fitAudio({ inputPath, seconds, outputPath }) {
+  // Written as PCM WAV, not MP3. LAME adds encoder delay and padding to every file, which
+  // accumulated to ~0.3s across five concatenated beats and pushed narration out of sync
+  // with the images. PCM concatenates sample-exactly; the single final encode happens in
+  // assemble().
+  const out = outputPath.replace(/\.[^.]+$/, '') + '.wav';
+  const common = ['-ar', '24000', '-ac', '1', '-c:a', 'pcm_s16le', '-y', out];
   const args = inputPath
-    ? ['-i', inputPath, '-af', `apad,atrim=0:${seconds}`, '-c:a', 'libmp3lame', '-y', outputPath]
-    : ['-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=mono', '-t', String(seconds), '-c:a', 'libmp3lame', '-y', outputPath];
-  await exec('ffmpeg', args, { maxBuffer: 16 * 1024 * 1024 });
-  return outputPath;
+    ? ['-i', inputPath, '-af', `apad,atrim=0:${seconds}`, ...common]
+    : ['-f', 'lavfi', '-i', 'anullsrc=r=24000:cl=mono', '-t', String(seconds), ...common];
+  await runFfmpeg(args);
+  return out;
 }
 
 /** Concatenate fitted per-beat audio into one track. */
 export async function concatAudio({ inputPaths, outputPath, workDir }) {
   const listFile = join(workDir, 'audio-list.txt');
   writeFileSync(listFile, inputPaths.map((p) => `file '${p.replace(/'/g, "'\\''")}'`).join('\n'));
-  await exec('ffmpeg', ['-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', '-y', outputPath], { maxBuffer: 16 * 1024 * 1024 });
+  await runFfmpeg(['-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', '-y', outputPath]);
   return outputPath;
 }

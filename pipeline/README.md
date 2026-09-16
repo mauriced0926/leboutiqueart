@@ -34,7 +34,7 @@ dying. So three things are structural here, not optional extras:
 ## Setup
 
 ```bash
-npm install
+npm install                        # includes a bundled ffmpeg binary as a fallback
 
 # .env.local (gitignored)
 ANTHROPIC_API_KEY=...              # console.anthropic.com — script generation
@@ -43,9 +43,13 @@ YOUTUBE_OAUTH_CLIENT_ID=...        # uploads need OAuth, an API key cannot publi
 YOUTUBE_OAUTH_CLIENT_SECRET=...
 YOUTUBE_OAUTH_REFRESH_TOKEN=...    # produced by: node pipeline/auth.mjs
 
-# ffmpeg, for assembly
+# ffmpeg, for assembly — a system install is preferred
 brew install ffmpeg                # or: sudo apt-get install ffmpeg
 ```
+
+If you would rather not install one system-wide, `npm install @ffmpeg-installer/ffmpeg`
+ships platform binaries inside the package and the pipeline finds it automatically.
+Resolution order is `FFMPEG_PATH` → `ffmpeg` on PATH → the bundled binary.
 
 ### Authorise uploads (once)
 
